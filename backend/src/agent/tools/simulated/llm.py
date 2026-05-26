@@ -16,10 +16,6 @@ FULL_INTRODUCTION = (
     "company. What do you do, and in what industry?"
 )
 
-COMPANY_SCRIPTS = [
-    "I see. {industry} is a dynamic space. What would you say makes {name} different from others in your field?",
-]
-
 
 class SimulatedLLMProvider(LLMProvider):
     """Simulated LLM that uses scripted responses for the onboarding flow."""
@@ -41,15 +37,11 @@ class SimulatedLLMProvider(LLMProvider):
 
         Employs a gated state machine: each stage validates that the user
         has provided meaningful input before advancing to the next stage.
-        Short or empty responses are not accepted as real answers.
         """
         stage = session.get("stage", "introduction")
-        company_name = session.get("company_name") or "your company"
-        industry = session.get("industry") or "this sector"
 
         # --- introduction ---------------------------------------------------
         if stage == "introduction":
-            # If user sent a real message, skip the intro and process it as company info
             text = user_message.strip()
             if text and len(text) >= 3:
                 extracted_name = text.split()[0].capitalize() if text.split() else text[:50].capitalize()
@@ -57,13 +49,13 @@ class SimulatedLLMProvider(LLMProvider):
                 session["description"] = text
                 session["industry"] = _infer_industry(text)
                 session["_intro_shown"] = True
-                reply = COMPANY_SCRIPTS[0].format(
-                    name=extracted_name,
-                    industry=session.get("industry", "this"),
+                reply = (
+                    f"I see. {session.get('industry', 'This')} is a dynamic space. "
+                    f"What would you say makes {extracted_name} different "
+                    f"from others in your field?"
                 )
                 return reply, session, "company"
 
-            # First call with empty/minimal message — show the intro once
             session["_intro_shown"] = True
             reply = FULL_INTRODUCTION
             return reply, session, stage
@@ -73,21 +65,13 @@ class SimulatedLLMProvider(LLMProvider):
             text = user_message.strip()
             if not text or len(text) < 3:
                 reply = (
-                    "I'd like to understand your business better. "
-                    "Could you tell me more about what your company does?"
+                    "I'd like to understand what sets you apart. "
+                    "Could you tell me more about what makes you different?"
                 )
                 return reply, session, stage
 
-            words = text.split()
-            extracted_name = words[0].capitalize() if words else text[:50].capitalize()
-            session["company_name"] = extracted_name
-            session["description"] = text
-            session["industry"] = _infer_industry(text)
-
-            reply = COMPANY_SCRIPTS[0].format(
-                name=extracted_name,
-                industry=session.get("industry", "this"),
-            )
+            session["differentiation"] = text
+            reply = "Understood. Now, who do you consider your main competitors?"
             return reply, session, "competitors"
 
         # --- competitors -----------------------------------------------------
@@ -105,17 +89,17 @@ class SimulatedLLMProvider(LLMProvider):
                 for c in text.replace(" and ", ",").split(",")
                 if c.strip() and len(c.strip()) >= 3
             ]
-            # Filter out entries that don't look like company names (too short, single words < 4 chars)
             valid = [c for c in competitors if len(c) >= 4 or " " in c]
-            existing = session.get("competitors", [])
 
             if not valid:
                 reply = (
                     "Those don't look like company names. "
-                    "Could you list your main competitors? For example: 'Salesforce, Microsoft, Oracle'"
+                    "Could you list your main competitors? "
+                    "For example: 'Salesforce, Microsoft, Oracle'"
                 )
                 return reply, session, stage
 
+            existing = session.get("competitors", [])
             session["competitors"] = list(set(existing + valid))
 
             reply = (
