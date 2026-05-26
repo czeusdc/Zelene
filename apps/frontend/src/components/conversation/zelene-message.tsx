@@ -1,0 +1,34 @@
+"use client";
+import { motion } from "framer-motion";
+import { Insight } from "@/lib/types";
+
+const actionLabels: Record<string, string> = {
+  monitor: "Monitor", generate_brief: "Generate Brief", dismiss: "Dismiss",
+  export_salesforce: "Export to Salesforce", push_slack: "Push to Slack", enrich_crm: "Enrich CRM",
+  escalate_alert: "Escalate Alert", push_siem: "Push to SIEM",
+};
+
+export function ZeleneMessage({ insight, onAction }: { insight: Insight; onAction: (action: string) => void }) {
+  return (
+    <motion.div initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} className="mb-4">
+      <div className="rounded-xl p-4" style={{ background: "hsl(var(--surface-overlay))" }}>
+        <div className="flex items-center gap-2 mb-2">
+          <div className="h-5 w-5 rounded-full flex items-center justify-center text-xs" style={{ background: "hsl(var(--accent-primary))" }}>Z</div>
+          <span className="text-xs font-medium uppercase tracking-wider" style={{ color: "hsl(var(--accent-primary))" }}>Zelene</span>
+        </div>
+        <p className="text-sm leading-relaxed mb-1">{insight.title}</p>
+        <p className="text-xs leading-relaxed mb-3" style={{ color: "hsl(var(--text-secondary))" }}>{insight.body}</p>
+        {insight.reasoning && <p className="text-xs italic mb-3" style={{ color: "hsl(var(--text-muted))" }}>— {insight.reasoning}</p>}
+        <div className="flex flex-wrap gap-2">
+          {(insight.actions || ["monitor", "dismiss"]).slice(0, 4).map((action) => (
+            <button key={action} onClick={() => onAction(action)}
+              className="rounded-lg px-3 py-1.5 text-xs font-medium transition-colors hover:opacity-80"
+              style={{ background: "hsl(var(--surface-elevated))", color: "hsl(var(--text-secondary))", border: "1px solid hsl(var(--text-muted) / 0.15)" }}>
+              {actionLabels[action] || action}
+            </button>
+          ))}
+        </div>
+      </div>
+    </motion.div>
+  );
+}

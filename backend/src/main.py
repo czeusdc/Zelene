@@ -27,6 +27,9 @@ app.include_router(settings_router)
 from src.api.intelligence import router as intelligence_router
 app.include_router(intelligence_router)
 
+from src.api.conversation import router as conversation_router
+app.include_router(conversation_router)
+
 @app.get("/api/health")
 async def health():
     return {"status": "ok"}
