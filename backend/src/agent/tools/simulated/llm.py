@@ -61,7 +61,7 @@ class SimulatedLLMProvider(LLMProvider):
                     name=extracted_name,
                     industry=session.get("industry", "this"),
                 )
-                return reply, session, "competitors"
+                return reply, session, "company"
 
             # First call with empty/minimal message — show the intro once
             session["_intro_shown"] = True
@@ -103,14 +103,20 @@ class SimulatedLLMProvider(LLMProvider):
             competitors = [
                 c.strip().rstrip(".").rstrip(",")
                 for c in text.replace(" and ", ",").split(",")
-                if c.strip()
+                if c.strip() and len(c.strip()) >= 3
             ]
+            # Filter out entries that don't look like company names (too short, single words < 4 chars)
+            valid = [c for c in competitors if len(c) >= 4 or " " in c]
             existing = session.get("competitors", [])
-            session["competitors"] = list(set(existing + competitors))
 
-            if not session["competitors"]:
-                reply = "I didn't catch that. Could you name a competitor?"
+            if not valid:
+                reply = (
+                    "Those don't look like company names. "
+                    "Could you list your main competitors? For example: 'Salesforce, Microsoft, Oracle'"
+                )
                 return reply, session, stage
+
+            session["competitors"] = list(set(existing + valid))
 
             reply = (
                 f"Noted. I'm now tracking {', '.join(session['competitors'])}. "
@@ -162,8 +168,8 @@ def _infer_industry(text: str) -> str:
         "Technology": ["tech", "software", "saas", "ai", "cloud", "dev", "data"],
         "Finance": ["fintech", "bank", "finance", "trading", "payment", "crypto"],
         "Healthcare": ["health", "medical", "patient", "clinic", "pharma"],
-        "Retail": ["retail", "ecommerce", "shop", "store", "brand"],
-        "Manufacturing": ["manufactur", "factory", "supply chain", "steel", "metal"],
+        "Retail": ["retail", "ecommerce", "shop", "store", "brand", "hardware", "wholesale", "distribution", "seller"],
+        "Manufacturing": ["manufactur", "factory", "supply chain", "steel", "metal", "industrial"],
         "Real Estate": ["real estate", "property", "housing", "construction"],
         "Education": ["education", "learning", "school", "university", "course"],
     }
