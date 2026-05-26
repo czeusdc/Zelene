@@ -1,8 +1,18 @@
+"""Module: Relate node — discovers and maps relationships between entities.
+
+This node creates entities from the company, competitors, and market context,
+then maps typed relationships (competes_with, supplies_to, affected_by)
+between them.
+"""
+
 import asyncio
 from src.agent.state import AgentState
 from src.sse.manager import sse_manager
 
+
 async def relate_node(state: AgentState) -> dict:
+    """Discover entities and map relationships between them."""
+
     await sse_manager.broadcast(state["deployment_id"], "node_start", {"node": "relate"})
     await asyncio.sleep(1 / sse_manager._speed)
 

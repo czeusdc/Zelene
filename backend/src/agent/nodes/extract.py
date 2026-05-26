@@ -1,3 +1,10 @@
+"""Module: Extract node — extracts intelligence signals from discovered sources.
+
+This node simulates pulling structured signals (pricing changes, sentiment
+shifts, hiring surges, regulatory movements) from the web and broadcasts
+each one via SSE.
+"""
+
 import asyncio
 from src.agent.state import AgentState
 from src.sse.manager import sse_manager
@@ -14,6 +21,8 @@ SIGNALS = [
 ]
 
 async def extract_node(state: AgentState) -> dict:
+    """Extract structured intelligence signals from web sources."""
+
     await sse_manager.broadcast(state["deployment_id"], "node_start", {"node": "extract"})
     signals = []
     for i, template in enumerate(SIGNALS):

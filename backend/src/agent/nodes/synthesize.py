@@ -1,8 +1,18 @@
+"""Module: Synthesize node — generates high-level insights from signals.
+
+This final pipeline node synthesizes extracted signals, verified patterns,
+and entity relationships into actionable intelligence insights, then
+marks the deployment as active/complete.
+"""
+
 import asyncio
 from src.agent.state import AgentState
 from src.sse.manager import sse_manager
 
+
 async def synthesize_node(state: AgentState) -> dict:
+    """Generate synthesized insights from all collected intelligence data."""
+
     await sse_manager.broadcast(state["deployment_id"], "node_start", {"node": "synthesize"})
     await asyncio.sleep(1.5 / sse_manager._speed)
 

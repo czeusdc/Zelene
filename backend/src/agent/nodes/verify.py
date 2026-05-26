@@ -1,8 +1,17 @@
+"""Module: Verify node — validates signal confidence and resolves conflicts.
+
+This node checks extracted signals for consistency with historical data,
+flags conflicts, and adjusts confidence scores.
+"""
+
 import asyncio
 from src.agent.state import AgentState
 from src.sse.manager import sse_manager
 
+
 async def verify_node(state: AgentState) -> dict:
+    """Verify signal confidence scores and resolve conflicting signals."""
+
     await sse_manager.broadcast(state["deployment_id"], "node_start", {"node": "verify"})
     await asyncio.sleep(0.5 / sse_manager._speed)
     signals = state.get("signals", [])
