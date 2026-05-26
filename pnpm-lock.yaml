@@ -8,7 +8,9 @@ importers:
 
   .: {}
 
-  apps/frontend:
+  backend: {}
+
+  frontend:
     dependencies:
       framer-motion:
         specifier: ^12.40.0
@@ -50,8 +52,6 @@ importers:
       typescript:
         specifier: ^5
         version: 5.9.3
-
-  backend: {}
 
 packages:
 
