@@ -95,7 +95,11 @@ async def save_company(req: SaveCompanyRequest, db: AsyncSession = Depends(get_d
 @router.get("/{company_id}")
 async def get_company(company_id: str, db: AsyncSession = Depends(get_db)):
     """Retrieve a saved company profile by its ID."""
-    company = await db.get(CompanyProfile, UUID(company_id))
+    try:
+        company_uuid = UUID(company_id)
+    except ValueError:
+        raise HTTPException(status_code=422, detail="Invalid company ID format")
+    company = await db.get(CompanyProfile, company_uuid)
     if not company:
         raise HTTPException(status_code=404, detail="Company not found")
     return {
