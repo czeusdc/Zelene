@@ -11,7 +11,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from sse_starlette.sse import EventSourceResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from pydantic import BaseModel
-from src.db.connection import get_db
+from src.db.connection import get_db, async_session
 from src.db.models import CompanyProfile, Deployment
 from src.agent.graph import build_graph
 from src.agent.state import AgentState
@@ -49,8 +49,20 @@ async def deploy(req: DeployRequest, db: AsyncSession = Depends(get_db)):
         "insights": [], "current_stage": "deploy", "signals_found": 0, "relationships_mapped": 0,
     }
 
-    graph = build_graph()
-    asyncio.create_task(graph.ainvoke(initial_state, config={"configurable": {"thread_id": deployment_id}}))
+    async def _run_deployment():
+        """Execute the intelligence graph and handle failures gracefully."""
+        try:
+            graph = build_graph()
+            await graph.ainvoke(initial_state, config={"configurable": {"thread_id": deployment_id}})
+        except Exception as e:
+            await sse_manager.broadcast(deployment_id, "error", {"message": str(e), "phase": "failed"})
+            async with async_session() as db:
+                deployment_row = await db.get(Deployment, UUID(deployment_id))
+                if deployment_row:
+                    deployment_row.status = "failed"
+                    await db.commit()
+
+    asyncio.create_task(_run_deployment())
 
     return {"stream_url": f"{settings.backend_url}/api/intelligence/stream?deployment_id={deployment_id}", "deployment_id": deployment_id}
 
