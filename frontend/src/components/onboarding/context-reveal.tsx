@@ -7,7 +7,7 @@
 "use client";
 import { motion } from "framer-motion";
 
-interface Props { context: Record<string, unknown>; onConfirm: () => void; onAdjust: () => void; }
+interface Props { context: Record<string, unknown>; onConfirm: () => void; onAdjust: () => void; error?: boolean; }
 
 function Card({ label, value }: { label: string; value: string | string[] }) {
   const display = Array.isArray(value) ? value.join(", ") : value;
@@ -26,7 +26,7 @@ function Card({ label, value }: { label: string; value: string | string[] }) {
  * ContextReveal — shows extracted company profile fields as cards
  * with Confirm / Adjust action buttons.
  */
-export function ContextReveal({ context, onConfirm, onAdjust }: Props) {
+export function ContextReveal({ context, onConfirm, onAdjust, error }: Props) {
   const items = [
     { label: "Company", value: context.company_name as string },
     { label: "Industry", value: context.industry as string },
@@ -42,6 +42,7 @@ export function ContextReveal({ context, onConfirm, onAdjust }: Props) {
       <div className="grid grid-cols-2 gap-3 mb-6">
         {items.map((item) => (<Card key={item.label} label={item.label} value={item.value} />))}
       </div>
+      {error && <p className="text-xs text-red-400 mb-4">Unable to save your profile. Please try again.</p>}
       <div className="flex gap-3">
         <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
           onClick={onConfirm} className="rounded-lg px-6 py-2.5 text-sm font-medium"

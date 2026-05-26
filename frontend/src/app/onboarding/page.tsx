@@ -34,6 +34,7 @@ export default function OnboardingPage() {
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [isThinking, setIsThinking] = useState(false);
   const [showContext, setShowContext] = useState(false);
+  const [confirmError, setConfirmError] = useState(false);
 
   const addMessage = useCallback((role: "zelene" | "user", content: string) => {
     setMessages((prev) => [...prev, { id: String(++msgCounter), role, content }]);
@@ -81,7 +82,7 @@ export default function OnboardingPage() {
     try {
       await api.saveCompany(sessionId);
       router.push(`/view?company_id=${sessionId}`);
-    } catch { /* fall through */ }
+    } catch { setConfirmError(true); }
   };
 
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
@@ -102,8 +103,10 @@ export default function OnboardingPage() {
           onConfirm={handleConfirm}
           onAdjust={() => {
             setShowContext(false);
+            setConfirmError(false);
             addMessage("zelene", "Of course. What would you like to adjust?");
           }}
+          error={confirmError}
         />
       )}
       {!showContext && (
