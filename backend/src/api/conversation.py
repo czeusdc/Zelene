@@ -1,3 +1,10 @@
+"""Module: Conversational chat API for asking questions about intelligence.
+
+This module provides a simulated conversational interface that answers
+user queries about competitors, pricing, hiring, regulations, and sentiment
+based on tracked intelligence.
+"""
+
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from pydantic import BaseModel
@@ -7,13 +14,18 @@ from src.db.models import CompanyProfile, Message
 
 router = APIRouter(prefix="/api/conversation", tags=["conversation"])
 
+
 class AskRequest(BaseModel):
+    """A question asked to Zelene about the company's intelligence."""
+
     company_id: str
     message: str
     entity: str | None = None
 
+
 @router.post("/ask")
 async def ask_zelene(req: AskRequest, db: AsyncSession = Depends(get_db)):
+    """Answer a user question using simulated intelligence context."""
     company = await db.get(CompanyProfile, UUID(req.company_id))
     if not company:
         raise HTTPException(status_code=404, detail="Company not found")

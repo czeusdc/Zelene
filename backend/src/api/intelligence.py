@@ -1,3 +1,9 @@
+"""Module: Intelligence deployment and SSE streaming API.
+
+This module handles deploying intelligence-gathering runs and streaming live
+updates back to the frontend via Server-Sent Events.
+"""
+
 import asyncio
 import json
 from uuid import UUID
@@ -14,11 +20,16 @@ from src.config import get_settings
 
 router = APIRouter(tags=["intelligence"])
 
+
 class DeployRequest(BaseModel):
+    """Request to start an intelligence-gathering deployment for a company."""
+
     company_id: str
+
 
 @router.post("/api/intelligence/deploy")
 async def deploy(req: DeployRequest, db: AsyncSession = Depends(get_db)):
+    """Launch an intelligence deployment and return the SSE stream URL."""
     company = await db.get(CompanyProfile, UUID(req.company_id))
     if not company:
         raise HTTPException(status_code=404, detail="Company not found")
@@ -45,9 +56,12 @@ async def deploy(req: DeployRequest, db: AsyncSession = Depends(get_db)):
 
 @router.get("/api/intelligence/stream")
 async def intelligence_stream(request: Request, deployment_id: str):
+    """SSE endpoint that streams intelligence events for a deployment."""
+
     conn = sse_manager.subscribe(deployment_id)
 
     async def event_generator():
+        """Yield SSE events from the deployment connection queue."""
         try:
             while conn.active:
                 if await request.is_disconnected():

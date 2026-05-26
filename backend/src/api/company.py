@@ -1,3 +1,9 @@
+"""Module: Company onboarding API endpoints.
+
+This module provides the conversational onboarding flow that collects company
+profile information from the user and persists it to the database.
+"""
+
 from uuid import uuid4, UUID
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -8,22 +14,32 @@ from src.agent.tools.simulated.llm import SimulatedLLMProvider
 
 router = APIRouter(prefix="/api/company", tags=["company"])
 
+
 class OnboardRequest(BaseModel):
+    """Incoming message during the conversational onboarding flow."""
+
     message: str
     session_id: str | None = None
 
+
 class OnboardResponse(BaseModel):
+    """LLM reply and accumulated context returned to the onboarding client."""
+
     reply: str
     session_id: str
     context_so_far: dict
 
+
 class SaveCompanyRequest(BaseModel):
+    """Request to persist a completed onboarding session as a company profile."""
+
     company_id: str
 
 onboarding_sessions: dict[str, dict] = {}
 
 @router.post("/onboard", response_model=OnboardResponse)
 async def onboard(req: OnboardRequest):
+    """Process a chat turn in the conversational onboarding flow."""
     session_id = req.session_id or str(uuid4())
     session = onboarding_sessions.get(session_id, {
         "company_name": None, "industry": None, "description": None,
@@ -52,6 +68,8 @@ async def onboard(req: OnboardRequest):
 
 @router.post("/save")
 async def save_company(req: SaveCompanyRequest, db: AsyncSession = Depends(get_db)):
+    """Persist the completed onboarding session to the database."""
+
     session = onboarding_sessions.get(req.company_id)
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
@@ -76,6 +94,7 @@ async def save_company(req: SaveCompanyRequest, db: AsyncSession = Depends(get_d
 
 @router.get("/{company_id}")
 async def get_company(company_id: str, db: AsyncSession = Depends(get_db)):
+    """Retrieve a saved company profile by its ID."""
     company = await db.get(CompanyProfile, UUID(company_id))
     if not company:
         raise HTTPException(status_code=404, detail="Company not found")
