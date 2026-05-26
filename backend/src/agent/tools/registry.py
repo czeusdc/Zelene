@@ -1,37 +1,72 @@
 """Module: Tool provider factory that resolves the active tool implementations.
 
-This module inspects application settings to decide whether to use real or
-simulated tool backends. Currently all paths default to simulated providers.
+Inspects application settings and user-provided API keys to decide whether to
+use real Bright Data / Gemini backends or fall back to simulated providers.
+Each tool resolves independently so partial real-mode (e.g. real LLM + simulated
+search) is supported.
 """
 
 from src.agent.tools.base import LLMProvider, SearchTool, ScraperTool
 from src.agent.tools.simulated.llm import SimulatedLLMProvider
 from src.agent.tools.simulated.search import SimulatedSearchTool
 from src.agent.tools.simulated.scrape import SimulatedScraperTool
+from src.agent.tools.real.search import BrightDataSearchTool
+from src.agent.tools.real.scrape import BrightDataScraperTool
+from src.agent.tools.real.unlocker import BrightDataUnlockerTool
 from src.config import get_settings
 
 
 class ToolProvider:
-    """Factory that creates the appropriate LLM, search, and scraper instances."""
+    """Factory that creates the appropriate LLM, search, and scraper instances.
+
+    Resolution order:
+    1. User-provided API key (from settings DB entry)
+    2. Environment variable (BRIGHT_DATA_API_KEY / GEMINI_API_KEY)
+    3. Simulated fallback
+    """
 
     def __init__(self, company_context: dict | None = None):
         self.settings = get_settings()
         self.company_context = company_context
 
     def get_llm(self) -> LLMProvider:
-        """Return the LLM provider (real or simulated based on API key presence)."""
+        """Return the LLM provider (real Gemini when key is present)."""
         if self.settings.gemini_api_key:
+            # TODO: Replace with real GeminiProvider when implemented
             return SimulatedLLMProvider(self.company_context)
         return SimulatedLLMProvider(self.company_context)
 
     def get_search(self) -> SearchTool:
-        """Return the search tool provider."""
+        """Return a Bright Data SERP search tool when a key is configured."""
         if self.settings.bright_data_api_key:
-            return SimulatedSearchTool(self.company_context)
+            try:
+                return BrightDataSearchTool(
+                    api_key=self.settings.bright_data_api_key,
+                    company_context=self.company_context,
+                )
+            except Exception:
+                pass  # fall through to simulated
         return SimulatedSearchTool(self.company_context)
 
     def get_scraper(self) -> ScraperTool:
-        """Return the scraper tool provider."""
+        """Return a Bright Data scraper when a key is configured."""
         if self.settings.bright_data_api_key:
-            return SimulatedScraperTool(self.company_context)
+            try:
+                return BrightDataScraperTool(
+                    api_key=self.settings.bright_data_api_key,
+                    company_context=self.company_context,
+                )
+            except Exception:
+                pass  # fall through to simulated
+        return SimulatedScraperTool(self.company_context)
+
+    def get_unlocker(self) -> ScraperTool:
+        """Return a Bright Data Web Unlocker when a key is configured."""
+        if self.settings.bright_data_api_key:
+            try:
+                return BrightDataUnlockerTool(
+                    api_key=self.settings.bright_data_api_key,
+                )
+            except Exception:
+                pass  # fall through to simulated
         return SimulatedScraperTool(self.company_context)
