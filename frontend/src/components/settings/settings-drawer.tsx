@@ -28,6 +28,7 @@ export function SettingsDrawer({ open, onClose }: { open: boolean; onClose: () =
   const [apiKey, setApiKey] = useState("");
   const [model, setModel] = useState("gemini-3.1-pro");
   const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState(false);
 
   useEffect(() => {
     if (open && companyId) { api.getSettings(companyId).then((s) => { if (s.gemini_model) setModel(s.gemini_model); }).catch(() => {}); }
@@ -36,8 +37,8 @@ export function SettingsDrawer({ open, onClose }: { open: boolean; onClose: () =
   const handleSave = async () => {
     if (!companyId) return;
     setSaving(true);
-    try { await api.saveSettings(companyId, { gemini_api_key: apiKey || undefined, gemini_model: model }); }
-    catch {} finally { setSaving(false); onClose(); }
+    try { await api.saveSettings(companyId, { gemini_api_key: apiKey || undefined, gemini_model: model }); onClose(); }
+    catch { setSaveError(true); } finally { setSaving(false); }
   };
 
   return (
@@ -82,6 +83,7 @@ export function SettingsDrawer({ open, onClose }: { open: boolean; onClose: () =
             className="w-full rounded-lg py-2.5 text-xs font-medium" style={{ background: "hsl(var(--accent-primary))", color: "white", opacity: saving ? 0.5 : 1 }}>
             {saving ? "Saving..." : "Save"}
           </button>
+          {saveError && <p className="text-xs text-red-400 mt-2 text-center">Failed to save settings. Please try again.</p>}
         </motion.div>
       </>)}
     </AnimatePresence>
