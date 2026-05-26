@@ -1,8 +1,19 @@
+/**
+ * @fileoverview Top bar of the strategic-intelligence View.
+ * Shows the Zelene logo, connection-status indicator, current phase label,
+ * and a settings gear button.
+ * Part of the Zelene strategic intelligence platform.
+ */
+
 "use client";
 import { useViewStore } from "@/stores/view-store";
 
 const phaseLabels: Record<string, string> = { deploying: "Deploying", gathering: "Gathering Intelligence", analyzing: "Analyzing", active: "Active" };
 
+/**
+ * ViewHeader — renders the View's top bar with phase badge, connection dot,
+ * and a settings button that invokes the parent callback.
+ */
 export function ViewHeader({ onSettingsClick }: { onSettingsClick: () => void }) {
   const phase = useViewStore((s) => s.phase);
   const connectionStatus = useViewStore((s) => s.connectionStatus);

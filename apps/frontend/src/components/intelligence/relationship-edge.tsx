@@ -1,7 +1,18 @@
+/**
+ * @fileoverview SVG relationship edge for the intelligence map.
+ * Draws a styled line between two entity nodes with an animated
+ * indicator dot and a relationship-type label.
+ * Part of the Zelene strategic intelligence platform.
+ */
+
 "use client";
 
 interface Point { x: number; y: number; }
 
+/**
+ * RelationshipEdge — renders a connection line between two entity positions
+ * with variable width/opacity based on relationship strength.
+ */
 export function RelationshipEdge({ from, to, type, strength }: { from: Point; to: Point; type: string; strength: number }) {
   const midX = (from.x + to.x) / 2;
   const midY = (from.y + to.y) / 2;

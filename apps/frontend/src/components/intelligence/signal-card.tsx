@@ -1,3 +1,9 @@
+/**
+ * @fileoverview Signal card component — displays an individual intelligence
+ * signal with severity colour coding, type icon, confidence badge, and source.
+ * Part of the Zelene strategic intelligence platform.
+ */
+
 "use client";
 import { motion } from "framer-motion";
 import { ConfidenceBadge } from "@/components/ui/confidence-badge";
@@ -6,6 +12,10 @@ import { Signal } from "@/lib/types";
 const severityColors = { info: "hsl(var(--signal-info))", warning: "hsl(var(--signal-warning))", critical: "hsl(var(--signal-critical))" };
 const typeIcons: Record<string, string> = { price_change: "\u{1F4CA}", sentiment_shift: "\u{1F4AC}", hiring_surge: "\u{1F465}", regulatory: "\u2696\uFE0F", vendor_change: "\u{1F3ED}" };
 
+/**
+ * SignalCard — renders a signal with a coloured left border, type icon,
+ * confidence badge, content body, and source attribution.
+ */
 export function SignalCard({ signal }: { signal: Signal }) {
   const color = severityColors[signal.severity] || severityColors.info;
   return (

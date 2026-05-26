@@ -1,9 +1,20 @@
+/**
+ * @fileoverview SVG entity node for the intelligence map.
+ * Renders a clickable circle with type-based colour, label, and an
+ * animated ring when the node is selected/active.
+ * Part of the Zelene strategic intelligence platform.
+ */
+
 "use client";
 import { motion } from "framer-motion";
 
 const typeColors: Record<string, string> = { company: "hsl(var(--accent-primary))", competitor: "hsl(var(--signal-warning))", vendor: "hsl(var(--signal-positive))", market: "hsl(var(--signal-info))", regulatory: "hsl(var(--signal-critical))" };
 const typeLabels: Record<string, string> = { company: "You", competitor: "Comp", vendor: "Vendor", market: "Market", regulatory: "Reg" };
 
+/**
+ * EntityNode — SVG group representing an entity on the relationship map.
+ * Larger circle for the company node; active nodes pulse.
+ */
 export function EntityNode({ x, y, name, type, active, onClick }: { x: number; y: number; name: string; type: string; active: boolean; onClick: () => void }) {
   const color = typeColors[type] || typeColors.company;
   const size = type === "company" ? 48 : 36;

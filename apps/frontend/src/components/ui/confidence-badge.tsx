@@ -1,6 +1,16 @@
+/**
+ * @fileoverview Confidence badge — renders a coloured pill showing the
+ * confidence percentage of a signal or insight. Low-confidence values pulse.
+ * Part of the Zelene strategic intelligence platform.
+ */
+
 "use client";
 import { motion } from "framer-motion";
 
+/**
+ * ConfidenceBadge — displays a confidence score as a rounded pill,
+ * colour-coded by threshold (green >= 85%, amber >= 70%, red < 70%).
+ */
 export function ConfidenceBadge({ value }: { value: number }) {
   const pct = Math.round(value * 100);
   const color = pct >= 85 ? "hsl(var(--signal-positive))" : pct >= 70 ? "hsl(var(--signal-warning))" : "hsl(var(--signal-critical))";
