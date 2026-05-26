@@ -20,6 +20,7 @@ dependencies = [
     "httpx>=0.28",
     "cryptography>=44",
     "brightdata-sdk>=0.1",
+    "psycopg2-binary>=2.9",
 ]
 
 [project.optional-dependencies]
