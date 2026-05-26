@@ -2,33 +2,24 @@
 
 This module provides a fully simulated LLM that drives the multi-stage
 conversational onboarding process for collecting company profile data.
+Each stage validates input before advancing to the next.
 """
 
 from src.agent.tools.base import LLMProvider, AgentMessage
 from typing import AsyncIterator
 
-STAGES = ["introduction", "company", "competitors", "goals", "confirm"]
+FULL_INTRODUCTION = (
+    "Welcome. I'm Zelene, your strategic intelligence presence.\n\n"
+    "Think of me as an analyst who continuously observes your market "
+    "on your behalf — competitors, risks, opportunities, sentiment shifts.\n\n"
+    "To begin, I'd like to understand your business. Tell me about your "
+    "company. What do you do, and in what industry?"
+)
 
-ONBOARDING_SCRIPTS = {
-    "introduction": [
-        "Welcome. I'm Zelene, your strategic intelligence presence.",
-        "Think of me as an analyst who continuously observes your market on your behalf — competitors, risks, opportunities, sentiment shifts.",
-        "To begin, I'd like to understand your business. Tell me about your company. What do you do, and in what industry?",
-    ],
-    "company": [
-        "I see. {industry} is a dynamic space.",
-        "What would you say makes {name} different from others in your field?",
-    ],
-    "competitors": [
-        "Understood. Now, who do you consider your main competitors?",
-    ],
-    "goals": [
-        "Good. One more thing — what matters most to your business right now?",
-    ],
-    "confirm": [
-        "I believe I have a clear picture now. Take a look at what I've understood.",
-    ],
-}
+COMPANY_SCRIPTS = [
+    "I see. {industry} is a dynamic space. What would you say makes {name} different from others in your field?",
+]
+
 
 class SimulatedLLMProvider(LLMProvider):
     """Simulated LLM that uses scripted responses for the onboarding flow."""
@@ -46,43 +37,123 @@ class SimulatedLLMProvider(LLMProvider):
         yield ""
 
     def onboarding_turn(self, user_message: str, session: dict) -> tuple[str, dict, str]:
-        """Advance the onboarding conversation by one user turn."""
-        stage = session.get("stage", "introduction")
-        company_name = session.get("company_name")
+        """Advance the onboarding conversation by one user turn.
 
+        Employs a gated state machine: each stage validates that the user
+        has provided meaningful input before advancing to the next stage.
+        Short or empty responses are not accepted as real answers.
+        """
+        stage = session.get("stage", "introduction")
+        company_name = session.get("company_name") or "your company"
+        industry = session.get("industry") or "this sector"
+
+        # --- introduction ---------------------------------------------------
         if stage == "introduction":
-            session["description"] = user_message
-            words = user_message.split()
-            session["company_name"] = " ".join(words[:3]) if len(words) > 3 else (user_message[:255] if user_message else "Your Company")
-            session["industry"] = "Technology"
-            next_stage = "company"
-        elif stage == "company":
-            next_stage = "competitors"
-        elif stage == "competitors":
-            competitors = [c.strip() for c in user_message.replace(" and ", ",").split(",") if c.strip()]
+            # First call (auto-triggered empty message) returns the full intro
+            session["_intro_shown"] = True
+            reply = FULL_INTRODUCTION
+            return reply, session, stage  # stay in introduction; user answers next
+
+        # --- company ---------------------------------------------------------
+        if stage == "company":
+            text = user_message.strip()
+            if not text or len(text) < 3:
+                reply = (
+                    "I'd like to understand your business better. "
+                    "Could you tell me more about what your company does?"
+                )
+                return reply, session, stage
+
+            words = text.split()
+            extracted_name = words[0].capitalize() if words else text[:50].capitalize()
+            session["company_name"] = extracted_name
+            session["description"] = text
+            session["industry"] = _infer_industry(text)
+
+            reply = COMPANY_SCRIPTS[0].format(
+                name=extracted_name,
+                industry=session.get("industry", "this"),
+            )
+            return reply, session, "competitors"
+
+        # --- competitors -----------------------------------------------------
+        if stage == "competitors":
+            text = user_message.strip()
+            if not text or len(text) < 2:
+                reply = (
+                    "I need to know who you're up against. "
+                    "Who are your main competitors? You can list a few names."
+                )
+                return reply, session, stage
+
+            competitors = [
+                c.strip().rstrip(".").rstrip(",")
+                for c in text.replace(" and ", ",").split(",")
+                if c.strip()
+            ]
             existing = session.get("competitors", [])
             session["competitors"] = list(set(existing + competitors))
-            next_stage = "goals" if len(session["competitors"]) > 0 else "competitors"
-        elif stage == "goals":
-            session["goals"] = [user_message[:200]]
-            session["market_focus"] = ["Global"]
-            session["concerns"] = []
-            next_stage = "confirm"
-        elif stage == "confirm":
-            next_stage = "complete"
-        else:
-            next_stage = "complete"
 
-        msg_counts = session.setdefault("_msg_count", {})
-        msg_counts[stage] = msg_counts.get(stage, 0) + 1
-        idx = msg_counts[stage] - 1
-        scripts = ONBOARDING_SCRIPTS.get(stage, ONBOARDING_SCRIPTS["introduction"])
+            if not session["competitors"]:
+                reply = "I didn't catch that. Could you name a competitor?"
+                return reply, session, stage
 
-        if stage == "introduction":
-            reply = scripts[idx] if idx < len(scripts) else scripts[-1]
-        elif stage == "confirm":
-            reply = scripts[0]
-        else:
-            reply = scripts[0].format(name=company_name or "your company", industry=session.get("industry", "this"))
+            reply = (
+                f"Noted. I'm now tracking {', '.join(session['competitors'])}. "
+                "One more thing — what matters most to your business right now? "
+                "What are your key goals for the coming quarters?"
+            )
+            return reply, session, "goals"
 
-        return reply, session, next_stage
+        # --- goals -----------------------------------------------------------
+        if stage == "goals":
+            text = user_message.strip()
+            if not text or len(text) < 3:
+                reply = (
+                    "Even a short note helps. What are your biggest priorities "
+                    "or concerns right now?"
+                )
+                return reply, session, stage
+
+            session["goals"] = [text[:200]]
+            session.setdefault("market_focus", ["Global"])
+            session.setdefault("concerns", [])
+            reply = (
+                "I believe I have a clear picture now. "
+                "Take a look at what I've understood."
+            )
+            return reply, session, "confirm"
+
+        # --- confirm ---------------------------------------------------------
+        if stage == "confirm":
+            return (
+                "I believe I have a clear picture now. "
+                "Take a look at what I've understood.",
+                session,
+                "complete",
+            )
+
+        # --- complete --------------------------------------------------------
+        return (
+            "Your intelligence environment is ready. Proceed to The View?",
+            session,
+            "complete",
+        )
+
+
+def _infer_industry(text: str) -> str:
+    """Heuristic industry inference from user description."""
+    lower = text.lower()
+    keywords = {
+        "Technology": ["tech", "software", "saas", "ai", "cloud", "dev", "data"],
+        "Finance": ["fintech", "bank", "finance", "trading", "payment", "crypto"],
+        "Healthcare": ["health", "medical", "patient", "clinic", "pharma"],
+        "Retail": ["retail", "ecommerce", "shop", "store", "brand"],
+        "Manufacturing": ["manufactur", "factory", "supply chain", "steel", "metal"],
+        "Real Estate": ["real estate", "property", "housing", "construction"],
+        "Education": ["education", "learning", "school", "university", "course"],
+    }
+    for industry, words in keywords.items():
+        if any(w in lower for w in words):
+            return industry
+    return "Technology"
