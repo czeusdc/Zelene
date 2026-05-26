@@ -1,0 +1,63 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --surface-base: 220 20% 6%;
+    --surface-elevated: 220 20% 9%;
+    --surface-overlay: 220 18% 12%;
+    --accent-primary: 228 56% 52%;
+    --accent-secondary: 180 45% 40%;
+    --text-primary: 220 15% 92%;
+    --text-secondary: 220 10% 64%;
+    --text-muted: 220 8% 42%;
+    --signal-positive: 160 60% 45%;
+    --signal-warning: 42 80% 55%;
+    --signal-critical: 0 72% 51%;
+    --signal-info: 220 40% 55%;
+    --font-sans: 'Inter', system-ui, sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+    --radius: 0.5rem;
+  }
+
+  .light {
+    --surface-base: 0 0% 98%;
+    --surface-elevated: 0 0% 100%;
+    --surface-overlay: 0 0% 96%;
+    --text-primary: 220 20% 10%;
+    --text-secondary: 220 10% 40%;
+    --text-muted: 220 8% 55%;
+  }
+
+  body {
+    font-family: var(--font-sans);
+    background-color: hsl(var(--surface-base));
+    color: hsl(var(--text-primary));
+    margin: 0;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+}
+
+@utility mesh-bg {
+  background-image:
+    radial-gradient(ellipse at 20% 50%, hsla(228, 56%, 52%, 0.03) 0%, transparent 60%),
+    radial-gradient(ellipse at 80% 20%, hsla(180, 45%, 40%, 0.02) 0%, transparent 50%);
+}
+
+@keyframes pulse-soft {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
+@utility animate-pulse-soft {
+  animation: pulse-soft 2s ease-in-out infinite;
+}
+
+@keyframes fade-in-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@utility animate-fade-in-up {
+  animation: fade-in-up 0.4s ease-out forwards;
+}
