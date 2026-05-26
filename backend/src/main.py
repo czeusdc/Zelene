@@ -1,10 +1,18 @@
+"""Module: FastAPI application entry point for the Zelene intelligence platform.
+
+This module creates the FastAPI application, configures CORS middleware, and
+registers all API routers (company, settings, intelligence, conversation).
+"""
+
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from src.config import get_settings
 
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    """Application lifespan manager that eagerly loads settings on startup."""
     get_settings()
     yield
 
@@ -32,4 +40,5 @@ app.include_router(conversation_router)
 
 @app.get("/api/health")
 async def health():
+    """Health-check endpoint for monitoring and load-balancer probes."""
     return {"status": "ok"}

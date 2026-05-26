@@ -1,3 +1,10 @@
+"""Module: SQLAlchemy ORM models for the Zelene intelligence platform.
+
+This module defines the complete database schema including company profiles,
+user settings, deployments, signals, entities, relationships, insights,
+messages, and embedding tables for vector search.
+"""
+
 import uuid
 from datetime import datetime, timezone
 from sqlalchemy import Column, String, Text, Integer, Float, Boolean, DateTime, ForeignKey
@@ -6,10 +13,14 @@ from sqlalchemy.orm import relationship
 from pgvector.sqlalchemy import Vector
 from src.db.base import Base
 
+
 def utcnow():
+    """Return the current UTC datetime, used as a default for timestamp columns."""
     return datetime.now(timezone.utc)
 
+
 class CompanyProfile(Base):
+    """A company profile captured during onboarding."""
     __tablename__ = "company_profiles"
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     name = Column(String(255), nullable=False)
@@ -24,6 +35,8 @@ class CompanyProfile(Base):
     deployments = relationship("Deployment", back_populates="company", cascade="all, delete-orphan")
 
 class UserSettings(Base):
+    """Per-company user preferences including API keys and model selection."""
+
     __tablename__ = "user_settings"
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     company_id = Column(UUID(as_uuid=True), ForeignKey("company_profiles.id", ondelete="CASCADE"), unique=True)
@@ -34,6 +47,8 @@ class UserSettings(Base):
     company = relationship("CompanyProfile", back_populates="settings")
 
 class Deployment(Base):
+    """An intelligence-gathering deployment run for a company."""
+
     __tablename__ = "deployments"
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     company_id = Column(UUID(as_uuid=True), ForeignKey("company_profiles.id", ondelete="CASCADE"))
@@ -47,6 +62,8 @@ class Deployment(Base):
     signals = relationship("Signal", back_populates="deployment", cascade="all, delete-orphan")
 
 class Signal(Base):
+    """An intelligence signal discovered during a deployment."""
+
     __tablename__ = "signals"
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     deployment_id = Column(UUID(as_uuid=True), ForeignKey("deployments.id", ondelete="CASCADE"))
@@ -64,6 +81,8 @@ class Signal(Base):
     deployment = relationship("Deployment", back_populates="signals")
 
 class Entity(Base):
+    """A named entity (person, organization, location, etc.) extracted from signals."""
+
     __tablename__ = "entities"
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     company_id = Column(UUID(as_uuid=True), ForeignKey("company_profiles.id", ondelete="CASCADE"))
@@ -74,6 +93,8 @@ class Entity(Base):
     last_signal_at = Column(DateTime(timezone=True))
 
 class Relationship(Base):
+    """A relationship link between two entities discovered during analysis."""
+
     __tablename__ = "relationships"
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     deployment_id = Column(UUID(as_uuid=True), ForeignKey("deployments.id", ondelete="CASCADE"))
@@ -85,6 +106,8 @@ class Relationship(Base):
     created_at = Column(DateTime(timezone=True), default=utcnow)
 
 class Insight(Base):
+    """A synthesized insight generated from related signals."""
+
     __tablename__ = "insights"
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     deployment_id = Column(UUID(as_uuid=True), ForeignKey("deployments.id", ondelete="CASCADE"))
@@ -100,6 +123,8 @@ class Insight(Base):
     created_at = Column(DateTime(timezone=True), default=utcnow)
 
 class Message(Base):
+    """A chat message exchanged in a conversational session."""
+
     __tablename__ = "messages"
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     company_id = Column(UUID(as_uuid=True), ForeignKey("company_profiles.id", ondelete="CASCADE"))
@@ -109,6 +134,8 @@ class Message(Base):
     created_at = Column(DateTime(timezone=True), default=utcnow)
 
 class SignalEmbedding(Base):
+    """Vector embedding of a signal's content for semantic search."""
+
     __tablename__ = "signal_embeddings"
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     signal_id = Column(UUID(as_uuid=True), ForeignKey("signals.id", ondelete="CASCADE"))
@@ -116,6 +143,8 @@ class SignalEmbedding(Base):
     created_at = Column(DateTime(timezone=True), default=utcnow)
 
 class CompanyContextEmbedding(Base):
+    """Vector embedding of company context content for semantic matching."""
+
     __tablename__ = "company_context_embeddings"
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     company_id = Column(UUID(as_uuid=True), ForeignKey("company_profiles.id", ondelete="CASCADE"))
