@@ -35,12 +35,16 @@ class CompanyProfile(Base):
     deployments = relationship("Deployment", back_populates="company", cascade="all, delete-orphan")
 
 class UserSettings(Base):
-    """Per-company user preferences including API keys and model selection."""
+    """Per-company user preferences including model selection.
+
+    API keys are NEVER stored in the database — they are read from
+    environment variables (.env) for server-side use or validated
+    per-session for user-provided keys.
+    """
 
     __tablename__ = "user_settings"
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     company_id = Column(UUID(as_uuid=True), ForeignKey("company_profiles.id", ondelete="CASCADE"), unique=True)
-    gemini_api_key = Column(Text)
     gemini_model = Column(String(50), default="gemini-3.1-pro")
     created_at = Column(DateTime(timezone=True), default=utcnow)
     updated_at = Column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)

@@ -10,7 +10,7 @@ export interface CompanyProfile {
   competitors: string[]; market_focus: string[]; business_goals: string[]; operational_concerns: string[];
 }
 
-export interface UserSettings { gemini_api_key?: string; gemini_model: string; }
+export interface UserSettings { gemini_model: string; has_api_key: boolean; }
 
 export interface Signal {
   id: string; deployment_id: string; type: string; title: string; content: string;

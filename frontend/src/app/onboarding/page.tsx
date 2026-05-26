@@ -111,6 +111,7 @@ export default function OnboardingPage() {
       )}
       {!showContext && (
         <form
+          method="post"
           onSubmit={handleSubmit}
           className="px-6 pb-8"
           style={{ maxWidth: "640px", margin: "0 auto", width: "100%" }}
