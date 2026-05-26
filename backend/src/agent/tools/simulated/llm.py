@@ -169,7 +169,13 @@ def _extract_company_name(text: str) -> str:
     Skips common first-person pronouns, articles, and filler words to find
     the first meaningful proper noun or capitalized word.
     """
-    skip = {"we", "our", "my", "i'm", "im", "i", "the", "a", "an", "its", "it", "this", "that"}
+    skip = {
+        "we", "our", "my", "i'm", "im", "i", "the", "a", "an", "its", "it",
+        "this", "that", "these", "those", "your", "their", "his", "her",
+        "we're", "were", "are", "is", "am", "was", "have", "had", "been", "be",
+        "and", "or", "but", "if", "then", "also", "just", "so", "not", "no",
+        "you", "they", "he", "she", "us", "them", "me",
+    }
     words = text.split()
     for w in words:
         clean = w.strip(".,!?'\"").capitalize()
