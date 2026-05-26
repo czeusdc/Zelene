@@ -1,3 +1,10 @@
+/**
+ * @fileoverview Settings drawer — animated slide-in panel for configuring
+ * theme (dark/light), Gemini API key, and model selection. Persists
+ * settings via the backend when saved.
+ * Part of the Zelene strategic intelligence platform.
+ */
+
 "use client";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -11,6 +18,10 @@ const MODELS = [
   { value: "gemini-3.1-flash-lite", label: "Gemini 3.1 Flash-Lite (economy)" },
 ];
 
+/**
+ * SettingsDrawer — slide-in drawer from the right edge with fields for
+ * theme toggle, API key, and model selection. Saves to backend on submit.
+ */
 export function SettingsDrawer({ open, onClose }: { open: boolean; onClose: () => void }) {
   const companyId = useViewStore((s) => s.companyId);
   const { theme, toggleTheme } = useTheme();

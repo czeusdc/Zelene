@@ -1,3 +1,10 @@
+/**
+ * @fileoverview Zelene insight message card — displays an AI-generated
+ * insight with title, body, optional reasoning, and contextual action buttons
+ * (monitor, generate brief, dismiss, etc.).
+ * Part of the Zelene strategic intelligence platform.
+ */
+
 "use client";
 import { motion } from "framer-motion";
 import { Insight } from "@/lib/types";
@@ -8,6 +15,10 @@ const actionLabels: Record<string, string> = {
   escalate_alert: "Escalate Alert", push_siem: "Push to SIEM",
 };
 
+/**
+ * ZeleneMessage — renders an insight card with the Zelene brand header,
+ * title, body text, optional reasoning, and contextual action buttons.
+ */
 export function ZeleneMessage({ insight, onAction }: { insight: Insight; onAction: (action: string) => void }) {
   return (
     <motion.div initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} className="mb-4">

@@ -1,6 +1,16 @@
+/**
+ * @fileoverview Typing indicator — three animated dots with a
+ * "Zelene is analyzing" label, shown while the backend is processing.
+ * Part of the Zelene strategic intelligence platform.
+ */
+
 "use client";
 import { motion } from "framer-motion";
 
+/**
+ * TypingIndicator — renders three pulsing dots and a label to indicate
+ * that Zelene is processing a request.
+ */
 export function TypingIndicator() {
   return (
     <div className="flex items-center gap-1.5 px-3 py-2">

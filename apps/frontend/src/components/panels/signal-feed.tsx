@@ -1,3 +1,9 @@
+/**
+ * @fileoverview Signal feed panel — renders the live stream of intelligence
+ * signals in a scrollable list, with a placeholder state while deploying.
+ * Part of the Zelene strategic intelligence platform.
+ */
+
 "use client";
 import { useViewStore } from "@/stores/view-store";
 import { SignalCard } from "@/components/intelligence/signal-card";
@@ -9,6 +15,10 @@ const statusMessages: Record<string, string> = {
   active: "Intelligence environment active.",
 };
 
+/**
+ * SignalFeed — reads signals from the view store and renders them
+ * as SignalCards, or shows a phase-dependent loading state.
+ */
 export function SignalFeed() {
   const signals = useViewStore((s) => s.signals);
   const phase = useViewStore((s) => s.phase);

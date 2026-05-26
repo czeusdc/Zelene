@@ -1,9 +1,21 @@
+/**
+ * @fileoverview Intelligence map panel — renders an interactive SVG
+ * force-layout graph of entities and their relationships. Highlights
+ * nodes that are referenced in recent signals.
+ * Part of the Zelene strategic intelligence platform.
+ */
+
 "use client";
 import { useMemo } from "react";
 import { useViewStore } from "@/stores/view-store";
 import { EntityNode } from "@/components/intelligence/entity-node";
 import { RelationshipEdge } from "@/components/intelligence/relationship-edge";
 
+/**
+ * IntelligenceMap — computes static positions for up to 5 entities,
+ * draws inter-entity relationship edges, and highlights nodes that
+ * appear in the most recent signals.
+ */
 export function IntelligenceMap() {
   const entities = useViewStore((s) => s.entities);
   const relationships = useViewStore((s) => s.relationships);

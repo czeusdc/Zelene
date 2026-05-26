@@ -1,3 +1,10 @@
+/**
+ * @fileoverview Zelene chat panel — provides a conversational interface
+ * for asking strategic questions. Messages are routed through the backend
+ * and displayed as ZeleneMessage cards.
+ * Part of the Zelene strategic intelligence platform.
+ */
+
 "use client";
 import { useState, FormEvent } from "react";
 import { useViewStore } from "@/stores/view-store";
@@ -6,6 +13,11 @@ import { TypingIndicator } from "@/components/conversation/typing-indicator";
 import { api } from "@/lib/api";
 import { motion } from "framer-motion";
 
+/**
+ * ZeleneChat — renders chat history from the store, an input form with
+ * a submit handler that calls the askZelene API, and a typing indicator
+ * while waiting for a response.
+ */
 export function ZeleneChat() {
   const messages = useViewStore((s) => s.messages);
   const isThinking = useViewStore((s) => s.isThinking);
