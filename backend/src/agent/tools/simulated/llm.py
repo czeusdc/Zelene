@@ -44,7 +44,7 @@ class SimulatedLLMProvider(LLMProvider):
         if stage == "introduction":
             text = user_message.strip()
             if text and len(text) >= 3:
-                extracted_name = text.split()[0].capitalize() if text.split() else text[:50].capitalize()
+                extracted_name = _extract_company_name(text)
                 session["company_name"] = extracted_name
                 session["description"] = text
                 session["industry"] = _infer_industry(text)
@@ -161,3 +161,22 @@ def _infer_industry(text: str) -> str:
         if any(w in lower for w in words):
             return industry
     return "Technology"
+
+
+def _extract_company_name(text: str) -> str:
+    """Extract the most likely company name from a user description.
+
+    Skips common first-person pronouns, articles, and filler words to find
+    the first meaningful proper noun or capitalized word.
+    """
+    skip = {"we", "our", "my", "i'm", "im", "i", "the", "a", "an", "its", "it", "this", "that"}
+    words = text.split()
+    for w in words:
+        clean = w.strip(".,!?'\"").capitalize()
+        if clean.lower() not in skip and len(clean) >= 2:
+            return clean
+    # Fallback: first non-trivial word
+    for w in words:
+        if len(w) >= 3:
+            return w.strip(".,!?'\"").capitalize()
+    return text[:50].capitalize()

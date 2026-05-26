@@ -80,8 +80,8 @@ export default function OnboardingPage() {
   const handleConfirm = async () => {
     if (!sessionId) return;
     try {
-      await api.saveCompany(sessionId);
-      router.push(`/view?company_id=${sessionId}`);
+      const res = await api.saveCompany(sessionId);
+      router.push(`/view?company_id=${res.company_id}`);
     } catch { setConfirmError(true); }
   };
 
