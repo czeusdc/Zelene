@@ -1,6 +1,16 @@
+/**
+ * @fileoverview Zelene avatar icon used during onboarding.
+ * Animated pulse ring communicates the "thinking" state.
+ * Part of the Zelene strategic intelligence platform.
+ */
+
 "use client";
 import { motion } from "framer-motion";
 
+/**
+ * ZeleneAvatar — renders the Zelene brand icon with an optional
+ * animated pulse ring when isThinking is true.
+ */
 export function ZeleneAvatar({ isThinking }: { isThinking?: boolean }) {
   return (
     <div className="flex flex-col items-center gap-3">

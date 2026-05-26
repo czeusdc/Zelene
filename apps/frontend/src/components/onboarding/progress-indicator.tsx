@@ -1,8 +1,18 @@
+/**
+ * @fileoverview Onboarding progress bar — five-dot indicator that
+ * animates between introduction → confirm stages.
+ * Part of the Zelene strategic intelligence platform.
+ */
+
 "use client";
 import { motion } from "framer-motion";
 
 const stages = ["introduction", "company", "competitors", "goals", "confirm"];
 
+/**
+ * ProgressIndicator — displays five animated dots representing the
+ * current onboarding stage. Active and completed stages are filled.
+ */
 export function ProgressIndicator({ stage }: { stage: string }) {
   const currentIdx = stages.indexOf(stage);
   return (

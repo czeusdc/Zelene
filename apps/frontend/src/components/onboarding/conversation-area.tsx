@@ -1,9 +1,20 @@
+/**
+ * @fileoverview Scrollable chat area for the onboarding flow.
+ * Renders Zelene prompts and user replies with fade-in animation,
+ * and auto-scrolls to the latest message.
+ * Part of the Zelene strategic intelligence platform.
+ */
+
 "use client";
 import { useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface Message { id: string; role: "zelene" | "user"; content: string; }
 
+/**
+ * ConversationArea — lists onboarding messages with staggered
+ * entry animations and a "thinking" indicator when Zelene is processing.
+ */
 export function ConversationArea({ messages, isThinking }: { messages: Message[]; isThinking: boolean }) {
   const bottomRef = useRef<HTMLDivElement>(null);
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages, isThinking]);

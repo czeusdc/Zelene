@@ -1,3 +1,9 @@
+/**
+ * @fileoverview Onboarding confirmation screen — displays a card grid of
+ * extracted company context and lets the user confirm or go back to adjust.
+ * Part of the Zelene strategic intelligence platform.
+ */
+
 "use client";
 import { motion } from "framer-motion";
 
@@ -16,6 +22,10 @@ function Card({ label, value }: { label: string; value: string | string[] }) {
   );
 }
 
+/**
+ * ContextReveal — shows extracted company profile fields as cards
+ * with Confirm / Adjust action buttons.
+ */
 export function ContextReveal({ context, onConfirm, onAdjust }: Props) {
   const items = [
     { label: "Company", value: context.company_name as string },
