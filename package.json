@@ -1,1 +1,1 @@
-﻿{"name":"zelene","private":true,"scripts":{"dev:frontend":"pnpm --filter frontend dev","dev:backend":"pnpm --filter backend dev","dev":"pnpm run --parallel dev:frontend dev:backend"}}
+﻿{"name":"zelene","private":true,"scripts":{"dev":"pnpm --parallel -r run dev"}}
