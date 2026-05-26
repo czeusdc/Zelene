@@ -121,6 +121,7 @@ export default function OnboardingPage() {
               type="text"
               autoFocus
               autoComplete="off"
+              placeholder="Type your response..."
               disabled={isThinking}
               className="flex-1 rounded-xl px-4 py-3 text-sm outline-none"
               style={{
