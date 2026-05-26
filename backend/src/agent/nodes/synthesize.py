@@ -16,29 +16,45 @@ async def synthesize_node(state: AgentState) -> dict:
     await sse_manager.broadcast(state["deployment_id"], "node_start", {"node": "synthesize"})
     await asyncio.sleep(1.5 / sse_manager.speed)
 
+    competitors = state.get("competitors", [])
+    comp0 = competitors[0] if competitors else "a competitor"
+    comp1 = competitors[1] if len(competitors) > 1 else comp0
+    company = state.get("company_name", "Your company")
+
     insights = [
         {
             "id": "ins_1", "type": "warning",
-            "title": "Competitor pricing pressure emerging",
-            "body": "I'm noticing a pattern. CompetitorX has reduced enterprise pricing by 12% while accelerating APAC hiring. This suggests a coordinated market expansion play.",
+            "title": f"Competitive pressure from {comp0}",
+            "body": (
+                f"I've detected signals suggesting {comp0} is making strategic moves "
+                f"that could affect {company}'s market position. "
+                f"Pricing adjustments and hiring activity indicate potential expansion."
+            ),
             "confidence": 0.88,
             "actions": ["monitor", "export_brief", "push_slack"],
-            "reasoning": "Pricing drop + hiring surge + regional focus = expansion signal.",
+            "reasoning": f"Pricing shifts + hiring activity at {comp0} = competitive pressure signal.",
         },
         {
             "id": "ins_2", "type": "opportunity",
-            "title": "Customer satisfaction gap at CompetitorY",
-            "body": "CompetitorY is experiencing a decline in customer satisfaction, with 47 negative reviews in 24 hours. Support and pricing are primary complaints.",
+            "title": f"Market opportunity vs {comp1}",
+            "body": (
+                f"Customer sentiment indicators suggest a window of opportunity "
+                f"relative to {comp1}. Service quality and pricing are emerging "
+                f"as key differentiators in the {state.get('industry', '')} space."
+            ),
             "confidence": 0.71,
             "actions": ["monitor", "export_salesforce", "generate_brief"],
-            "reasoning": "Sentiment decline + pricing complaints = competitor churn risk, acquisition opportunity.",
+            "reasoning": f"Sentiment shifts + market positioning = competitive opportunity for {company}.",
         },
     ]
 
     for insight in insights:
         await sse_manager.broadcast(state["deployment_id"], "insight", insight)
 
-    await sse_manager.broadcast(state["deployment_id"], "node_complete", {"node": "synthesize", "insights_generated": len(insights)})
-    await sse_manager.broadcast(state["deployment_id"], "complete", {"phase": "active", "summary": "Intelligence environment ready. Continuous monitoring engaged."})
+    await sse_manager.broadcast(state["deployment_id"], "node_complete",
+                                {"node": "synthesize", "insights_generated": len(insights)})
+    await sse_manager.broadcast(state["deployment_id"], "complete",
+                                {"phase": "active",
+                                 "summary": "Intelligence environment ready. Continuous monitoring engaged."})
 
     return {"insights": insights, "current_stage": "active"}
