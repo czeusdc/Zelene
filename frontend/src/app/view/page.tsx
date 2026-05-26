@@ -22,6 +22,7 @@ function ViewContent() {
   const companyId = searchParams.get("company_id");
   const setCompanyId = useViewStore((s) => s.setCompanyId);
   const setDeploymentId = useViewStore((s) => s.setDeploymentId);
+  const setConnectionStatus = useViewStore((s) => s.setConnectionStatus);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [deploying, setDeploying] = useState(true);
 
@@ -33,7 +34,7 @@ function ViewContent() {
     api.deployIntelligence(companyId).then((res) => {
       setDeploymentId(res.deployment_id);
       setDeploying(false);
-    }).catch(() => setDeploying(false));
+    }).catch(() => { setConnectionStatus("error"); setDeploying(false); });
   }, [companyId]);
 
   if (deploying) {
