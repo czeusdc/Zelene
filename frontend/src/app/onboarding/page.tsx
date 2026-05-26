@@ -6,7 +6,7 @@
  */
 
 "use client";
-import { useState, useCallback, useEffect, FormEvent } from "react";
+import { useState, useCallback, FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { OnboardingLayout } from "@/components/onboarding/onboarding-layout";
