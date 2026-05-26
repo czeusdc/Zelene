@@ -1,3 +1,9 @@
+"""Module: Simulated web-scraper tool with mock page content.
+
+This module returns hard-coded page content for recognized URL patterns
+(pricing, reviews, careers) so the agent can operate without live scraping.
+"""
+
 from src.agent.tools.base import ScraperTool
 
 MOCK_PAGES = {
@@ -7,10 +13,13 @@ MOCK_PAGES = {
 }
 
 class SimulatedScraperTool(ScraperTool):
+    """Simulated scraper that returns mock page text based on URL keywords."""
+
     def __init__(self, company_context: dict | None = None):
         self.context = company_context or {}
 
     async def scrape(self, url: str) -> str:
+        """Return mock page content for the given URL."""
         url_lower = url.lower()
         if "pricing" in url_lower:
             return MOCK_PAGES["pricing"]

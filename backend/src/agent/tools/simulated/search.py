@@ -1,3 +1,9 @@
+"""Module: Simulated web-search tool with mock search results.
+
+This module returns pre-canned search results for recognized query patterns,
+allowing the agent to operate without live search APIs during development.
+"""
+
 from src.agent.tools.base import SearchTool
 
 MOCK_SERP = {
@@ -17,10 +23,13 @@ MOCK_SERP = {
 }
 
 class SimulatedSearchTool(SearchTool):
+    """Simulated search that matches queries against a static mock index."""
+
     def __init__(self, company_context: dict | None = None):
         self.context = company_context or {}
 
     async def search(self, query: str, num_results: int = 10) -> list[dict]:
+        """Return mock search results matching the query against known keys."""
         query_lower = query.lower()
         results = []
         for key, items in MOCK_SERP.items():

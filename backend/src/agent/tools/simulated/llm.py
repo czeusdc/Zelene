@@ -1,3 +1,9 @@
+"""Module: Simulated LLM provider with conversational onboarding flow.
+
+This module provides a fully simulated LLM that drives the multi-stage
+conversational onboarding process for collecting company profile data.
+"""
+
 from src.agent.tools.base import LLMProvider, AgentMessage
 from typing import AsyncIterator
 
@@ -25,17 +31,22 @@ ONBOARDING_SCRIPTS = {
 }
 
 class SimulatedLLMProvider(LLMProvider):
+    """Simulated LLM that uses scripted responses for the onboarding flow."""
+
     def __init__(self, company_context: dict | None = None):
         self.context = company_context or {}
 
     async def chat(self, messages: list[AgentMessage]) -> str:
+        """Return a simple acknowledgment (chat stub)."""
         return "I understand."
 
     async def stream(self, messages: list[AgentMessage]) -> AsyncIterator[str]:
+        """Yield a simple streaming response (streaming stub)."""
         yield "Processing..."
         yield ""
 
     def onboarding_turn(self, user_message: str, session: dict) -> tuple[str, dict, str]:
+        """Advance the onboarding conversation by one user turn."""
         stage = session.get("stage", "introduction")
         company_name = session.get("company_name")
 
