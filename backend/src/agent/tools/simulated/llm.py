@@ -49,10 +49,24 @@ class SimulatedLLMProvider(LLMProvider):
 
         # --- introduction ---------------------------------------------------
         if stage == "introduction":
-            # First call (auto-triggered empty message) returns the full intro
+            # If user sent a real message, skip the intro and process it as company info
+            text = user_message.strip()
+            if text and len(text) >= 3:
+                extracted_name = text.split()[0].capitalize() if text.split() else text[:50].capitalize()
+                session["company_name"] = extracted_name
+                session["description"] = text
+                session["industry"] = _infer_industry(text)
+                session["_intro_shown"] = True
+                reply = COMPANY_SCRIPTS[0].format(
+                    name=extracted_name,
+                    industry=session.get("industry", "this"),
+                )
+                return reply, session, "competitors"
+
+            # First call with empty/minimal message — show the intro once
             session["_intro_shown"] = True
             reply = FULL_INTRODUCTION
-            return reply, session, stage  # stay in introduction; user answers next
+            return reply, session, stage
 
         # --- company ---------------------------------------------------------
         if stage == "company":
