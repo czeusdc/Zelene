@@ -1,3 +1,10 @@
+/*
+ * Zelene design system — dual-theme (dark/light) CSS custom properties,
+ * Tailwind v4 utilities, mesh background, and keyframe animations.
+ * Theme is toggled via the `light` class on the <html> element.
+ * Part of the Zelene strategic intelligence platform.
+ */
+
 @import "tailwindcss";
 
 @layer base {

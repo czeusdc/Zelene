@@ -1,3 +1,9 @@
+/**
+ * @fileoverview Landing page — hero screen with the Zelene brand mark,
+ * tagline, and a "Begin" button that routes to onboarding.
+ * Part of the Zelene strategic intelligence platform.
+ */
+
 "use client";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";

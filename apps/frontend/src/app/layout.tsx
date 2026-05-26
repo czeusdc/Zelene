@@ -1,3 +1,9 @@
+/**
+ * @fileoverview Root layout — sets the HTML document shell, applies the
+ * dark theme class and mesh background, and defines page metadata.
+ * Part of the Zelene strategic intelligence platform.
+ */
+
 import type { Metadata } from "next";
 import "./globals.css";
 

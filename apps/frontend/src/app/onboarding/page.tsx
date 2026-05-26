@@ -1,3 +1,10 @@
+/**
+ * @fileoverview Onboarding page — interactive conversational flow that
+ * gathers company context (name, industry, competitors, goals) from the
+ * user, then saves the profile and routes to the strategic-intelligence View.
+ * Part of the Zelene strategic intelligence platform.
+ */
+
 "use client";
 import { useState, useCallback, useEffect, useRef, FormEvent } from "react";
 import { useRouter } from "next/navigation";

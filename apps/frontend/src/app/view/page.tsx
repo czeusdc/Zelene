@@ -1,3 +1,10 @@
+/**
+ * @fileoverview Strategic-intelligence View — main dashboard with a
+ * three-column layout: signal feed, intelligence map, and Zelene chat.
+ * Initiates intelligence deployment and connects the SSE stream on mount.
+ * Part of the Zelene strategic intelligence platform.
+ */
+
 "use client";
 import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
