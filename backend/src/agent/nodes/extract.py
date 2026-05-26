@@ -26,7 +26,7 @@ async def extract_node(state: AgentState) -> dict:
     await sse_manager.broadcast(state["deployment_id"], "node_start", {"node": "extract"})
     signals = []
     for i, template in enumerate(SIGNALS):
-        await asyncio.sleep(1.5 / sse_manager._speed)
+        await asyncio.sleep(1.5 / sse_manager.speed)
         comp0 = state["competitors"][0] if state["competitors"] else "CompetitorX"
         comp1 = state["competitors"][1] if len(state["competitors"]) > 1 else "CompetitorY"
         signal = {**template, "id": f"sig_{state['deployment_id'][:8]}_{i}",

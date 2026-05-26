@@ -14,7 +14,7 @@ async def synthesize_node(state: AgentState) -> dict:
     """Generate synthesized insights from all collected intelligence data."""
 
     await sse_manager.broadcast(state["deployment_id"], "node_start", {"node": "synthesize"})
-    await asyncio.sleep(1.5 / sse_manager._speed)
+    await asyncio.sleep(1.5 / sse_manager.speed)
 
     insights = [
         {

@@ -14,7 +14,7 @@ async def relate_node(state: AgentState) -> dict:
     """Discover entities and map relationships between them."""
 
     await sse_manager.broadcast(state["deployment_id"], "node_start", {"node": "relate"})
-    await asyncio.sleep(1 / sse_manager._speed)
+    await asyncio.sleep(1 / sse_manager.speed)
 
     entities = [
         {"id": "e1", "name": state["company_name"], "type": "company", "activity_level": 0.8},
@@ -31,7 +31,7 @@ async def relate_node(state: AgentState) -> dict:
     ]
 
     for rel in relationships:
-        await asyncio.sleep(0.5 / sse_manager._speed)
+        await asyncio.sleep(0.5 / sse_manager.speed)
         await sse_manager.broadcast(state["deployment_id"], "relationship", rel)
 
     await sse_manager.broadcast(state["deployment_id"], "node_complete", {"node": "relate", "entities_mapped": len(entities), "relationships_mapped": len(relationships)})

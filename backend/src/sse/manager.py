@@ -34,6 +34,11 @@ class SSEManager:
         self._connections: dict[str, list[Connection]] = {}
         self._speed: float = 1.0
 
+    @property
+    def speed(self) -> float:
+        """Return the simulation speed, guarded against division by zero."""
+        return self._speed if self._speed > 0 else 0.1
+
     def create_deployment(self) -> str:
         """Create a deployment tracking entry and return its ID."""
         deployment_id = str(uuid.uuid4())
