@@ -1,8 +1,40 @@
-﻿node_modules/
-.env
-.next/
+﻿# Dependencies
+node_modules/
 .venv/
 __pycache__/
 *.pyc
+
+# Environment
+.env
+
+# Build outputs
+.next/
+*.egg-info/
+
+# Dev tooling
 .superpowers/
 .ignore/
+
+# AI IDE/CLI agents (auto-generated, not project code)
+AGENTS.md
+CLAUDE.md
+GEMINI.md
+COPILOT.md
+CURSOR.md
+AIDER.md
+.cursor/
+.claude/
+.gemini/
+.codex/
+.windsurf/
+.aider*
+.continue/
+.github/copilot-instructions.md
+
+# Platform lockfiles (we use pnpm)
+package-lock.json
+
+# IDE
+.idea/
+*.swp
+*.swo
