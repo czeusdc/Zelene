@@ -63,6 +63,7 @@ export function ZeleneChat() {
       <form onSubmit={handleAsk} className="p-3 border-t" style={{ borderColor: "hsl(var(--text-muted) / 0.1)" }}>
         <div className="flex gap-2">
           <input value={input} onChange={(e) => setInput(e.target.value)} placeholder="Ask Zelene about a competitor, signal, or risk..."
+            autoComplete="off"
             className="flex-1 rounded-lg px-3 py-2 text-xs outline-none" style={{ background: "hsl(var(--surface-overlay))", color: "hsl(var(--text-primary))", border: "1px solid hsl(var(--text-muted) / 0.15)" }} />
           <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} type="submit" disabled={!input.trim() || isThinking}
             className="rounded-lg px-4 py-2 text-xs font-medium" style={{ background: "hsl(var(--accent-primary))", color: "white", opacity: !input.trim() ? 0.4 : 1 }}>Ask</motion.button>
