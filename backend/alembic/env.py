@@ -23,9 +23,14 @@ target_metadata = Base.metadata
 
 # Derive the sync-dialect URL from settings (Alembic needs psycopg2, not asyncpg)
 settings = get_settings()
-sync_url = settings.database_url.replace("+asyncpg", "").replace(
-    "postgresql+asyncpg", "postgresql"
-)
+raw = settings.database_url
+
+# Convert asyncpg URL to psycopg2-compatible sync URL
+sync_url = raw.replace("+asyncpg", "").replace("postgresql+asyncpg", "postgresql")
+# asyncpg uses ?ssl=require, psycopg2 needs ?sslmode=require
+sync_url = sync_url.replace("?ssl=require", "?sslmode=require")
+# Remove channel_binding param (not supported by psycopg2)
+sync_url = sync_url.replace("&channel_binding=require", "")
 config.set_main_option("sqlalchemy.url", sync_url)
 
 
