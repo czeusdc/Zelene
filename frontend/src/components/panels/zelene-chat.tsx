@@ -49,9 +49,15 @@ export function ZeleneChat() {
             <p className="text-sm text-center" style={{ color: "hsl(var(--text-muted))" }}>Zelene will surface strategic insights here as intelligence is gathered.</p>
           </div>
         )}
-        {messages.map((msg) => (
-          <ZeleneMessage key={msg.id} insight={{ id: msg.id, type: "observation", title: msg.content.split("\n\n")[0] || msg.content.slice(0, 100), body: msg.content, confidence: 0.8, evidence_signals: [], actions: ["monitor", "generate_brief", "dismiss"] }} onAction={(a) => console.log("Action:", a)} />
-        ))}
+        {messages.map((msg) =>
+          msg.role === "user" ? (
+            <div key={msg.id} className="flex justify-end mb-4">
+              <div className="rounded-xl px-4 py-2.5 max-w-[80%] text-sm" style={{ background: "hsl(var(--accent-primary) / 0.12)", color: "hsl(var(--text-primary))" }}>{msg.content}</div>
+            </div>
+          ) : (
+            <ZeleneMessage key={msg.id} insight={{ id: msg.id, type: "observation", title: msg.content.split("\n\n")[0] || msg.content.slice(0, 100), body: msg.content, confidence: 0.8, evidence_signals: [], actions: ["monitor", "generate_brief", "dismiss"] }} onAction={(a) => console.log("Action:", a)} />
+          )
+        )}
         {isThinking && <TypingIndicator />}
       </div>
       <form onSubmit={handleAsk} className="p-3 border-t" style={{ borderColor: "hsl(var(--text-muted) / 0.1)" }}>
