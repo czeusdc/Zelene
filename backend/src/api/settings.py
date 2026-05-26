@@ -47,6 +47,6 @@ async def save_settings(req: SettingsUpdate, db: AsyncSession = Depends(get_db))
         settings.gemini_api_key = req.gemini_api_key
     if req.gemini_model is not None:
         settings.gemini_model = req.gemini_model
-    db.add(settings)
+    # settings is already tracked by the session (fetched via select)
     await db.commit()
     return {"updated": True}
