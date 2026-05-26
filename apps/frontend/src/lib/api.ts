@@ -1,3 +1,10 @@
+/**
+ * @fileoverview Typed API client for the Zelene backend.
+ * Wraps fetch with JSON helpers and exposes endpoint-level methods
+ * for onboarding, intelligence deployment, signals, chat, and settings.
+ * Part of the Zelene strategic intelligence platform.
+ */
+
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {

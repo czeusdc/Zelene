@@ -1,6 +1,16 @@
+/**
+ * @fileoverview Global Zustand store for the strategic-intelligence View.
+ * Holds signals, entities, relationships, chat messages, and UI state
+ * (connection status, deployment phase, thinking indicator).
+ * Part of the Zelene strategic intelligence platform.
+ */
+
 import { create } from "zustand";
 import { Signal, Entity, RelationshipEdge, ChatMessage } from "@/lib/types";
 
+/**
+ * ViewState — shape of the view store including data arrays and UI flags.
+ */
 interface ViewState {
   signals: Signal[]; addSignal: (s: Signal) => void;
   entities: Entity[]; setEntities: (e: Entity[]) => void;

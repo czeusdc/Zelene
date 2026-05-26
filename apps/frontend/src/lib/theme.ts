@@ -1,3 +1,10 @@
+/**
+ * @fileoverview Central design-token reference for the Zelene UI.
+ * Exports a frozen theme object with colors, typography, and spacing
+ * used throughout the application.
+ * Part of the Zelene strategic intelligence platform.
+ */
+
 export const theme = {
   colors: {
     surface: {

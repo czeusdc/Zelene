@@ -1,8 +1,18 @@
+/**
+ * @fileoverview Theme management hook — persists user preference to localStorage
+ * and toggles the `light` class on the document root.
+ * Part of the Zelene strategic intelligence platform.
+ */
+
 "use client";
 import { useState, useEffect, useCallback } from "react";
 
 type Theme = "dark" | "light";
 
+/**
+ * useTheme — reads/writes theme preference from localStorage and
+ * returns the current theme, a setter, and a toggle function.
+ */
 export function useTheme() {
   const [theme, setThemeState] = useState<Theme>("dark");
 

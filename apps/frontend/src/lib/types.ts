@@ -1,3 +1,10 @@
+/**
+ * @fileoverview Shared TypeScript interfaces for the Zelene platform:
+ * CompanyProfile, Signal, Entity, RelationshipEdge, Insight, ChatMessage,
+ * and UserSettings.
+ * Part of the Zelene strategic intelligence platform.
+ */
+
 export interface CompanyProfile {
   id: string; name: string; industry?: string; description?: string;
   competitors: string[]; market_focus: string[]; business_goals: string[]; operational_concerns: string[];

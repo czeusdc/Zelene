@@ -1,9 +1,20 @@
+/**
+ * @fileoverview SSE-based intelligence stream hook — connects to the backend
+ * SSE endpoint and dispatches signals, relationships, insights, and status
+ * updates into the global view store.
+ * Part of the Zelene strategic intelligence platform.
+ */
+
 "use client";
 import { useEffect } from "react";
 import { useViewStore } from "@/stores/view-store";
 import { api } from "@/lib/api";
 import { Signal, RelationshipEdge, Insight } from "@/lib/types";
 
+/**
+ * useIntelligenceStream — opens a Server-Sent Events connection for the active
+ * deployment and routes incoming events to the view store.
+ */
 export function useIntelligenceStream() {
   const deploymentId = useViewStore((s) => s.deploymentId);
   const addSignal = useViewStore((s) => s.addSignal);
