@@ -34,5 +34,9 @@ async def relate_node(state: AgentState) -> dict:
         await asyncio.sleep(0.5 / sse_manager.speed)
         await sse_manager.broadcast(state["deployment_id"], "relationship", rel)
 
+    # Broadcast entity data so the frontend can render the map
+    for entity in entities:
+        await sse_manager.broadcast(state["deployment_id"], "entity", entity)
+
     await sse_manager.broadcast(state["deployment_id"], "node_complete", {"node": "relate", "entities_mapped": len(entities), "relationships_mapped": len(relationships)})
     return {"entities": entities, "relationships": relationships, "relationships_mapped": len(relationships), "current_stage": "synthesize"}

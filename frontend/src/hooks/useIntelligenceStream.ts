@@ -9,7 +9,7 @@
 import { useEffect } from "react";
 import { useViewStore } from "@/stores/view-store";
 import { api } from "@/lib/api";
-import { Signal, RelationshipEdge, Insight } from "@/lib/types";
+import { Signal, RelationshipEdge, Insight, Entity } from "@/lib/types";
 
 /**
  * useIntelligenceStream — opens a Server-Sent Events connection for the active
@@ -36,6 +36,11 @@ export function useIntelligenceStream() {
     source.addEventListener("relationship", (e) => {
       const data = JSON.parse(e.data) as RelationshipEdge;
       useViewStore.setState((s) => ({ relationships: [...s.relationships, data] }));
+    });
+
+    source.addEventListener("entity", (e) => {
+      const data = JSON.parse(e.data) as Entity;
+      useViewStore.setState((s) => ({ entities: [...s.entities, data] }));
     });
 
     source.addEventListener("insight", (e) => {
