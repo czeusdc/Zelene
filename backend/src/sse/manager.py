@@ -56,7 +56,10 @@ class SSEManager:
         full = {**data, "timestamp": datetime.now(timezone.utc).isoformat()}
         for conn in self._connections.get(deployment_id, [])[:]:
             if conn.active:
-                await conn.send(event_type, full)
+                try:
+                    await conn.send(event_type, full)
+                except Exception:
+                    conn.active = False
 
 
 sse_manager = SSEManager()
