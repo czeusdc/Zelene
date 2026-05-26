@@ -10,6 +10,7 @@ from typing import Sequence, Union
 from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
+from pgvector.sqlalchemy import VECTOR
 
 
 # revision identifiers, used by Alembic.
@@ -127,7 +128,7 @@ def upgrade() -> None:
         "signal_embeddings",
         sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True),
         sa.Column("signal_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("signals.id", ondelete="CASCADE")),
-        sa.Column("embedding", postgresql.VECTOR(768)),
+        sa.Column("embedding", VECTOR(768)),
         sa.Column("created_at", sa.DateTime(timezone=True)),
     )
 
@@ -135,7 +136,7 @@ def upgrade() -> None:
         "company_context_embeddings",
         sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True),
         sa.Column("company_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("company_profiles.id", ondelete="CASCADE")),
-        sa.Column("embedding", postgresql.VECTOR(768)),
+        sa.Column("embedding", VECTOR(768)),
         sa.Column("content", sa.Text()),
         sa.Column("created_at", sa.DateTime(timezone=True)),
     )
