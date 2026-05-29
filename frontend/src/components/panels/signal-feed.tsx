@@ -7,6 +7,7 @@
 "use client";
 import { useViewStore } from "@/stores/view-store";
 import { SignalCard } from "@/components/intelligence/signal-card";
+import { SourceCard } from "@/components/intelligence/source-card";
 
 const statusMessages: Record<string, string> = {
   deploying: "Preparing intelligence deployment...",
@@ -21,6 +22,7 @@ const statusMessages: Record<string, string> = {
  */
 export function SignalFeed() {
   const signals = useViewStore((s) => s.signals);
+  const sources = useViewStore((s) => s.sources);
   const phase = useViewStore((s) => s.phase);
 
   if (signals.length === 0 && phase !== "active") {
@@ -35,8 +37,39 @@ export function SignalFeed() {
   }
 
   return (
-    <div className="flex flex-col gap-3 p-4 overflow-y-auto h-full">
-      {signals.map((signal, i) => (<SignalCard key={signal.id || i} signal={signal} />))}
+    <div className="flex flex-col h-full overflow-hidden">
+      <div className="px-4 pt-4 pb-2">
+        <span
+          className="text-xs uppercase"
+          style={{
+            color: "hsl(var(--text-muted))",
+            opacity: 0.5,
+            letterSpacing: "0.2em",
+          }}
+        >
+          Signal Feed
+        </span>
+      </div>
+      <div className="flex-1 flex flex-col gap-3 p-4 overflow-y-auto">
+        {sources.length > 0 && (
+          <div className="mb-4">
+            <h3
+              className="text-xs font-medium mb-2 uppercase tracking-wide"
+              style={{ color: "hsl(var(--text-muted))" }}
+            >
+              I'm reviewing these sources:
+            </h3>
+            <div className="space-y-2">
+              {sources.map((source, idx) => (
+                <SourceCard key={idx} source={source} />
+              ))}
+            </div>
+          </div>
+        )}
+        {signals.map((signal, i) => (
+          <SignalCard key={signal.id || i} signal={signal} />
+        ))}
+      </div>
     </div>
   );
 }
