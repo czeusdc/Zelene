@@ -45,7 +45,7 @@ class UserSettings(Base):
     __tablename__ = "user_settings"
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     company_id = Column(UUID(as_uuid=True), ForeignKey("company_profiles.id", ondelete="CASCADE"), unique=True)
-    gemini_model = Column(String(50), default="gemini-3.1-pro")
+    llm_model = Column(String(50), default="deepseek/deepseek-v4-pro")
     created_at = Column(DateTime(timezone=True), default=utcnow)
     updated_at = Column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
     company = relationship("CompanyProfile", back_populates="settings")

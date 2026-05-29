@@ -1,7 +1,7 @@
 """Module: Tool provider factory that resolves the active tool implementations.
 
 Inspects application settings and user-provided API keys to decide whether to
-use real Bright Data / Gemini backends or fall back to simulated providers.
+use real Bright Data / AIMLAPI backends or fall back to simulated providers.
 Each tool resolves independently so partial real-mode (e.g. real LLM + simulated
 search) is supported.
 """
@@ -21,7 +21,7 @@ class ToolProvider:
 
     Resolution order:
     1. User-provided API key (from settings DB entry)
-    2. Environment variable (BRIGHT_DATA_API_KEY / GEMINI_API_KEY)
+    2. Environment variable (BRIGHT_DATA_API_KEY / AIML_API_KEY)
     3. Simulated fallback
     """
 
@@ -29,12 +29,21 @@ class ToolProvider:
         self.settings = get_settings()
         self.company_context = company_context
 
-    def get_llm(self) -> LLMProvider:
-        """Return the LLM provider (real Gemini when key is present)."""
-        if self.settings.gemini_api_key:
+    def get_llm(self, reasoning_effort: str = "medium") -> LLMProvider:
+        """Return the LLM provider (real AIMLAPI when key is present).
+
+        Args:
+            reasoning_effort: Reasoning depth for DeepSeek V4 Pro —
+                "low" (fast/chatty), "medium" (balanced), "high" (deep analysis).
+                Ignored by simulated provider.
+        """
+        if self.settings.aiml_api_key:
             try:
-                from src.agent.tools.real.llm import GeminiProvider
-                return GeminiProvider(api_key=self.settings.gemini_api_key)
+                from src.agent.tools.real.llm import AIMLAPIProvider
+                return AIMLAPIProvider(
+                    api_key=self.settings.aiml_api_key,
+                    reasoning_effort=reasoning_effort,
+                )
             except Exception:
                 pass
         return SimulatedLLMProvider(self.company_context)

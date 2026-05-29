@@ -1,7 +1,7 @@
 """Module: Conversational chat API for asking questions about intelligence.
 
 This module provides a conversational interface that answers user queries
-about competitors, pricing, hiring, regulations, and sentiment. When Gemini
+about competitors, pricing, hiring, regulations, and sentiment. When the LLM
 is configured, responses are generated from real signal data. Otherwise,
 keyword-routed template responses are used as fallback.
 """
@@ -89,7 +89,7 @@ def _keyword_reply(q: str, company, competitors: list[str]) -> str:
 
 @router.post("/ask")
 async def ask_zelene(req: AskRequest, db: AsyncSession = Depends(get_db)):
-    """Answer a user question using Gemini or keyword-routed fallback."""
+    """Answer a user question using the LLM or keyword-routed fallback."""
     company = await db.get(CompanyProfile, UUID(req.company_id))
     if not company:
         raise HTTPException(status_code=404, detail="Company not found")
@@ -133,7 +133,7 @@ async def ask_zelene(req: AskRequest, db: AsyncSession = Depends(get_db)):
             raw_reply = await llm.chat([AgentMessage(role="user", content=prompt)])
             reply = filter_length(filter_tone(raw_reply), max_words=100)
         except Exception as exc:
-            logger.warning("Gemini chat failed, falling back to keyword routing: %s", exc)
+            logger.warning("LLM chat failed, falling back to keyword routing: %s", exc)
             reply = _keyword_reply(q, company, competitors)
     else:
         reply = _keyword_reply(q, company, competitors)

@@ -10,7 +10,7 @@ export interface CompanyProfile {
   competitors: string[]; market_focus: string[]; business_goals: string[]; operational_concerns: string[];
 }
 
-export interface UserSettings { gemini_model: string; has_api_key: boolean; }
+export interface UserSettings { llm_model: string; has_api_key: boolean; }
 
 export interface Signal {
   id: string;
@@ -21,11 +21,13 @@ export interface Signal {
   confidence: number;
   severity: "info" | "warning" | "critical";
   source_url?: string;
+  source_ids?: string[];
   entities?: string[];
   extracted_at?: string;
 }
 
 export interface Source {
+  id: string;
   title: string;
   url: string;
   snippet: string;
@@ -33,7 +35,7 @@ export interface Source {
 }
 
 export interface Entity {
-  id: string; name: string; type: "competitor" | "vendor" | "market" | "regulatory" | "customer_segment" | "potential_competitor";
+  id: string; name: string; type: "company" | "competitor" | "market" | "regulatory";
   description?: string; activity_level: number; last_signal_at?: string;
 }
 

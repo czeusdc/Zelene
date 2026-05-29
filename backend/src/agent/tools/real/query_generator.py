@@ -1,23 +1,23 @@
 """Module: Discovery Intent Generator for dynamic search queries.
 
-Uses Gemini to generate contextual search queries based on company profile,
-competitors, industry, and onboarding context. Replaces hardcoded query
-templates with intelligent, context-aware search strategies.
+Uses the LLM provider to generate contextual search queries based on company
+profile, competitors, industry, and onboarding context. Replaces hardcoded
+query templates with intelligent, context-aware search strategies.
 """
 
 import logging
 from typing import List
-from src.agent.tools.real.llm import GeminiProvider
+from src.agent.tools.base import LLMProvider, AgentMessage
 from src.agent.tools.real.prompts import QUERY_GENERATION_PROMPT
 
 logger = logging.getLogger(__name__)
 
 
 class QueryGenerator:
-    """Generates dynamic search queries using Gemini based on company context."""
+    """Generates dynamic search queries using the LLM based on company context."""
 
-    def __init__(self, gemini_provider: GeminiProvider):
-        self.gemini = gemini_provider
+    def __init__(self, llm_provider: LLMProvider):
+        self.llm = llm_provider
 
     async def generate_queries(
         self,
@@ -48,20 +48,19 @@ class QueryGenerator:
         )
 
         try:
-            messages = [{"role": "user", "content": prompt}]
-            response = await self.gemini.chat(messages)
-            
+            response = await self.llm.chat([AgentMessage(role="user", content=prompt)])
+
             queries = [
                 line.strip()
                 for line in response.strip().split("\n")
                 if line.strip() and not line.strip().startswith("#")
             ]
-            
+
             queries = queries[:max_queries]
-            
+
             logger.info(f"Generated {len(queries)} queries for {company_name}")
             return queries
-            
+
         except Exception as e:
             logger.error(f"Query generation failed: {e}")
             return self._fallback_queries(company_name, industry, competitors)

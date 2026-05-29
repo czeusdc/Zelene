@@ -1,7 +1,7 @@
 """Module: Synthesize node — generates high-level insights from signals.
 
 This final pipeline node synthesizes extracted signals, verified patterns,
-and entity relationships into actionable intelligence insights. When Gemini
+and entity relationships into actionable intelligence insights. When the LLM
 is configured, real insights are generated concurrently with the timing delay
 and filtered through the personality calibration layer.
 """
@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 
 
 def _build_template_insights(state: AgentState) -> list[dict]:
-    """Generate fallback template insights when Gemini is unavailable."""
+    """Generate fallback template insights when the LLM is unavailable."""
     competitors = state.get("competitors", [])
     comp0 = competitors[0] if competitors else "a competitor"
     comp1 = competitors[1] if len(competitors) > 1 else comp0
@@ -65,7 +65,7 @@ async def synthesize_node(state: AgentState) -> dict:
         "competitors": state.get("competitors", []),
     }
     provider = ToolProvider(company_context)
-    llm = provider.get_llm()
+    llm = provider.get_llm(reasoning_effort="high")
 
     template_insights = _build_template_insights(state)
     insights = template_insights
@@ -80,24 +80,24 @@ async def synthesize_node(state: AgentState) -> dict:
             relationships_json=json.dumps(state.get("relationships", [])[:10], indent=2, default=str),
         )
 
-        async def fetch_gemini_insights():
+        async def fetch_llm_insights():
             return await llm.chat_structured(
                 [AgentMessage(role="user", content=prompt)],
                 schema_description="JSON array of 2 insight objects with id, type, title, body, confidence, actions, reasoning",
             )
 
-        gemini_task = asyncio.create_task(fetch_gemini_insights())
+        llm_task = asyncio.create_task(fetch_llm_insights())
         await asyncio.sleep(1.5 * sse_manager.speed)
 
         try:
-            raw_insights = await asyncio.wait_for(gemini_task, timeout=10.0)
+            raw_insights = await asyncio.wait_for(llm_task, timeout=30.0)
             if isinstance(raw_insights, list) and len(raw_insights) >= 1:
                 for i, ins in enumerate(raw_insights):
                     ins.setdefault("id", f"ins_{i + 1}")
                     ins.setdefault("actions", ["monitor", "export_brief"])
                 insights = apply_zelene_filters(raw_insights[:2])
         except (asyncio.TimeoutError, Exception) as exc:
-            logger.warning("Gemini synthesis failed, using templates: %s", exc)
+            logger.warning("LLM synthesis failed, using templates: %s", exc)
             insights = template_insights
     else:
         await asyncio.sleep(1.5 * sse_manager.speed)

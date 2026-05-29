@@ -14,7 +14,6 @@ const typeColors: Record<string, string> = {
   vendor: "hsl(var(--signal-positive))",
   market: "hsl(var(--signal-info))",
   regulatory: "hsl(var(--signal-critical))",
-  potential_competitor: "hsl(var(--signal-warning))",
 };
 
 const typeLabels: Record<string, string> = {
@@ -23,7 +22,6 @@ const typeLabels: Record<string, string> = {
   vendor: "Vendor",
   market: "Market",
   regulatory: "Reg",
-  potential_competitor: "Potential",
 };
 
 /** EntityNode — SVG group representing an entity on the relationship map.
@@ -120,10 +118,9 @@ export function EntityNode({
       <circle
         r={size / 2}
         fill={color}
-        opacity={type === "company" ? 0.2 : type === "potential_competitor" ? 0.06 : 0.12}
+        opacity={type === "company" ? 0.2 : 0.12}
         stroke={color}
         strokeWidth={type === "company" ? 2 : 1.5}
-        strokeDasharray={type === "potential_competitor" ? "4 3" : "none"}
       />
 
       {/* Name label */}

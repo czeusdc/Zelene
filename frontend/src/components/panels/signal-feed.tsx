@@ -57,7 +57,7 @@ export function SignalFeed() {
               className="text-xs font-medium mb-2 uppercase tracking-wide"
               style={{ color: "hsl(var(--text-muted))" }}
             >
-              I'm reviewing these sources:
+              I&rsquo;m reviewing these sources:
             </h3>
             <div className="space-y-2">
               {sources.map((source, idx) => (
@@ -67,7 +67,7 @@ export function SignalFeed() {
           </div>
         )}
         {signals.map((signal, i) => (
-          <SignalCard key={signal.id || i} signal={signal} />
+          <SignalCard key={signal.id || i} signal={signal} sources={sources} />
         ))}
       </div>
     </div>

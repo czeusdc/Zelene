@@ -14,8 +14,7 @@ import { EntityNode } from "@/components/intelligence/entity-node";
 import { RelationshipEdge } from "@/components/intelligence/relationship-edge";
 
 /**
- * Hard-coded positions for up to 6 entities — the 6th slot accommodates
- * a potential_competitor entity surfaced from new_entrant signals.
+ * Hard-coded positions for up to 6 entities.
  */
 const positions: Record<number, { x: number; y: number }> = {
   0: { x: 350, y: 250 },
@@ -43,7 +42,6 @@ const nodeVariants = {
  * IntelligenceMap — computes static positions for up to 6 entities,
  * draws inter-entity relationship edges, highlights nodes that appear
  * in the most recent signals, and orchestrates entry/emphasis motion.
- * The 6th slot supports potential_competitor entities from new_entrant signals.
  */
 export function IntelligenceMap() {
   const entities = useViewStore((s) => s.entities);

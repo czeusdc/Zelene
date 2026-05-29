@@ -20,7 +20,7 @@ class SettingsUpdate(BaseModel):
     """Payload for updating user settings (model only — no API keys)."""
 
     company_id: str
-    gemini_model: str | None = None
+    llm_model: str | None = None
 
 
 @router.get("")
@@ -40,8 +40,8 @@ async def get_settings(company_id: str, db: AsyncSession = Depends(get_db)):
 
     env_settings = get_env_settings()
     return {
-        "gemini_model": settings.gemini_model,
-        "has_api_key": bool(env_settings.gemini_api_key),
+        "llm_model": settings.llm_model,
+        "has_api_key": bool(env_settings.aiml_api_key),
     }
 
 
@@ -60,7 +60,7 @@ async def save_settings(req: SettingsUpdate, db: AsyncSession = Depends(get_db))
     if not settings:
         raise HTTPException(status_code=404, detail="Settings not found")
 
-    if req.gemini_model is not None:
-        settings.gemini_model = req.gemini_model
+    if req.llm_model is not None:
+        settings.llm_model = req.llm_model
     await db.commit()
     return {"updated": True}

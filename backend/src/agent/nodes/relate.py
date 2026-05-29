@@ -2,8 +2,8 @@
 
 This node creates entities from the company, competitors, and market context,
 then maps typed relationships (competes_with, operates_in, affected_by)
-between them. Adapts to any number of competitors. Also scans extracted
-signals for new_entrant events to surface potential competitors on the map.
+between them. Only real companies from the user's competitive landscape
+are used — no entities are fabricated.
 """
 
 import asyncio
@@ -14,8 +14,9 @@ from src.sse.manager import sse_manager
 async def relate_node(state: AgentState) -> dict:
     """Discover entities and map relationships between them.
 
-    Uses state["signals"] to find new_entrant events and creates
-    potential_competitor entities with threatens relationships.
+    Builds entities from the company's actual competitive landscape
+    and maps typed edges (competes_with, operates_in, affected_by).
+    Does NOT create entities from synthetic signal data.
     """
 
     await sse_manager.broadcast(state["deployment_id"], "node_start", {"node": "relate"})
@@ -63,22 +64,6 @@ async def relate_node(state: AgentState) -> dict:
     relationships.append({"id": "r_co_market", "entity_a": "e1", "entity_b": "e_market",
                           "relationship_type": "operates_in", "strength": 0.9})
     entities.append(market)
-
-    # Scan signals for new_entrant events — create potential competitor entities
-    signals = state.get("signals", [])
-    entrant_idx = 0
-    for signal in signals:
-        if signal.get("type") == "new_entrant":
-            entrant_name = signal.get("entities", [None])[0]
-            if not entrant_name:
-                continue
-            eid = f"e_entrant_{entrant_idx}"
-            entities.append({"id": eid, "name": entrant_name, "type": "potential_competitor",
-                            "activity_level": 0.3})
-            # Potential competitor threatens the company
-            relationships.append({"id": f"r_threatens_{entrant_idx}", "entity_a": eid, "entity_b": "e1",
-                                  "relationship_type": "threatens", "strength": 0.5})
-            entrant_idx += 1
 
     for rel in relationships:
         await asyncio.sleep(0.5 * sse_manager.speed)

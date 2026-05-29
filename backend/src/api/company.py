@@ -134,7 +134,7 @@ async def onboard(req: OnboardRequest):
             session["stage"] = next_stage
 
         except Exception as exc:
-            logger.warning("Gemini onboarding failed, falling back to simulated: %s", exc)
+            logger.warning("AIMLAPI onboarding failed, falling back to simulated: %s", exc)
             fallback = SimulatedLLMProvider(session)
             reply, updated, next_stage = fallback.onboarding_turn(req.message, session)
             session.update(updated)
