@@ -13,13 +13,27 @@ export interface CompanyProfile {
 export interface UserSettings { gemini_model: string; has_api_key: boolean; }
 
 export interface Signal {
-  id: string; deployment_id: string; type: string; title: string; content: string;
-  source: string; source_url?: string; confidence: number;
-  severity: "info" | "warning" | "critical"; entities: string[]; conflicts_with?: string[]; extracted_at: string;
+  id: string;
+  type: string;
+  title: string;
+  content: string;
+  source: string;
+  confidence: number;
+  severity: "info" | "warning" | "critical";
+  source_url?: string;
+  entities?: string[];
+  extracted_at?: string;
+}
+
+export interface Source {
+  title: string;
+  url: string;
+  snippet: string;
+  query: string;
 }
 
 export interface Entity {
-  id: string; name: string; type: "competitor" | "vendor" | "market" | "regulatory" | "customer_segment";
+  id: string; name: string; type: "competitor" | "vendor" | "market" | "regulatory" | "customer_segment" | "potential_competitor";
   description?: string; activity_level: number; last_signal_at?: string;
 }
 

@@ -44,7 +44,7 @@ export function SignalCard({ signal }: { signal: Signal }) {
       <div className="flex items-center gap-2 text-xs" style={{ color: "hsl(var(--text-muted))" }}>
         <span>{signal.source}</span>
         <span>&middot;</span>
-        <RelativeTime dateString={signal.extracted_at} />
+        {signal.extracted_at && <RelativeTime dateString={signal.extracted_at} />}
         {signal.confidence < 0.75 && <span style={{ color: "hsl(var(--signal-warning))" }}>— Early signal, I'll need more data to be sure</span>}
       </div>
     </motion.div>
