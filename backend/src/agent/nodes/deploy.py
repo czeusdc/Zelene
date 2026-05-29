@@ -9,6 +9,7 @@ import asyncio
 from datetime import datetime
 from src.agent.state import AgentState
 from src.agent.tools.registry import ToolProvider
+from src.agent.tools.real.query_generator import QueryGenerator
 from src.sse.manager import sse_manager
 
 
@@ -25,17 +26,21 @@ async def deploy_node(state: AgentState) -> dict:
     provider = ToolProvider(company_context)
     search_tool = provider.get_search()
 
+    gemini_provider = provider.get_llm()
+    query_generator = QueryGenerator(gemini_provider)
+
     competitors = state.get("competitors", [])
     industry = state.get("industry", "technology")
-    year = datetime.now().year
-    queries = []
-    if competitors:
-        queries.append(f"{competitors[0]} pricing changes {year}")
-    if len(competitors) > 1:
-        queries.append(f"{competitors[1]} customer reviews {year}")
-    elif competitors:
-        queries.append(f"{competitors[0]} customer reviews {year}")
-    queries.append(f"{industry} market trends {year}")
+    goals = state.get("goals", [])
+    onboarding_context = ", ".join(goals) if goals else ""
+
+    queries = await query_generator.generate_queries(
+        company_name=state["company_name"],
+        industry=industry,
+        competitors=competitors,
+        onboarding_context=onboarding_context,
+        max_queries=8,
+    )
 
     async def run_searches():
         results = []
