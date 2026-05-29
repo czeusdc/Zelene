@@ -1,7 +1,9 @@
 /**
  * @fileoverview SSE-based intelligence stream hook — connects to the backend
  * SSE endpoint and dispatches signals, relationships, insights, and status
- * updates into the global view store.
+ * updates into the global view store. Also drives focus-state choreography
+ * so the UI emphasizes the panel most relevant to incoming data, and
+ * manages the silence moment after the intelligence run completes.
  * Part of the Zelene strategic intelligence platform.
  */
 
@@ -9,7 +11,18 @@
 import { useEffect } from "react";
 import { useViewStore } from "@/stores/view-store";
 import { api } from "@/lib/api";
-import { Signal, RelationshipEdge, Insight, Entity } from "@/lib/types";
+import { Signal, RelationshipEdge, Insight, Entity, Source } from "@/lib/types";
+
+/** Module-level timer to debounce returning focus to balanced. */
+let focusTimeout: ReturnType<typeof setTimeout> | null = null;
+
+function setTemporaryFocus(focus: "signal" | "graph" | "chat", duration: number) {
+  useViewStore.getState().setFocusState(focus);
+  if (focusTimeout) clearTimeout(focusTimeout);
+  focusTimeout = setTimeout(() => {
+    useViewStore.getState().setFocusState("balanced");
+  }, duration);
+}
 
 /**
  * useIntelligenceStream — opens a Server-Sent Events connection for the active
@@ -18,9 +31,11 @@ import { Signal, RelationshipEdge, Insight, Entity } from "@/lib/types";
 export function useIntelligenceStream() {
   const deploymentId = useViewStore((s) => s.deploymentId);
   const addSignal = useViewStore((s) => s.addSignal);
+  const addSource = useViewStore((s) => s.addSource);
   const addMessage = useViewStore((s) => s.addMessage);
   const setConnectionStatus = useViewStore((s) => s.setConnectionStatus);
   const setPhase = useViewStore((s) => s.setPhase);
+  const setSilence = useViewStore((s) => s.setSilence);
 
   useEffect(() => {
     if (!deploymentId) return;
@@ -31,22 +46,31 @@ export function useIntelligenceStream() {
     source.addEventListener("signal", (e) => {
       const data = JSON.parse(e.data) as Signal;
       if (data.type !== "status") addSignal(data);
+      setTemporaryFocus("signal", 3000);
+    });
+
+    source.addEventListener("source", (e) => {
+      const data = JSON.parse(e.data) as Source;
+      addSource(data);
     });
 
     source.addEventListener("relationship", (e) => {
       const data = JSON.parse(e.data) as RelationshipEdge;
       useViewStore.setState((s) => ({ relationships: [...s.relationships, data] }));
+      setTemporaryFocus("graph", 3000);
     });
 
     source.addEventListener("entity", (e) => {
       const data = JSON.parse(e.data) as Entity;
       useViewStore.setState((s) => ({ entities: [...s.entities, data] }));
+      setTemporaryFocus("graph", 3000);
     });
 
     source.addEventListener("insight", (e) => {
       const data = JSON.parse(e.data) as Insight;
       addMessage({ id: data.id || crypto.randomUUID(), role: "zelene",
         content: `${data.title}\n\n${data.body}`, created_at: new Date().toISOString(), related_insight: data.id });
+      setTemporaryFocus("chat", 4000);
     });
 
     source.addEventListener("node_start", (e) => {
@@ -55,10 +79,30 @@ export function useIntelligenceStream() {
       else if (data.node === "classify" || data.node === "verify") setPhase("analyzing");
     });
 
-    source.addEventListener("complete", () => { setPhase("active"); setConnectionStatus("connected"); });
+    source.addEventListener("complete", () => {
+      setPhase("active");
+      setConnectionStatus("connected");
+      setSilence(true);
+      setTimeout(() => {
+        setSilence(false);
+        addMessage({
+          id: crypto.randomUUID(),
+          role: "zelene",
+          content: "Synthesis complete. Your intelligence environment is now active.",
+          created_at: new Date().toISOString(),
+        });
+      }, 2000);
+    });
+
     source.onopen = () => setConnectionStatus("connected");
     source.onerror = () => setConnectionStatus("error");
 
-    return () => source.close();
+    return () => {
+      source.close();
+      if (focusTimeout) {
+        clearTimeout(focusTimeout);
+        focusTimeout = null;
+      }
+    };
   }, [deploymentId]);
 }
