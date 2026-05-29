@@ -3,7 +3,8 @@
 Inspects application settings and user-provided API keys to decide whether to
 use real Bright Data / AIMLAPI backends or fall back to simulated providers.
 Each tool resolves independently so partial real-mode (e.g. real LLM + simulated
-search) is supported.
+search) is supported. A ``force_simulation`` flag on each getter bypasses API
+key checks entirely for demo/presentation mode.
 """
 
 from src.agent.tools.base import LLMProvider, SearchTool, ScraperTool
@@ -29,15 +30,17 @@ class ToolProvider:
         self.settings = get_settings()
         self.company_context = company_context
 
-    def get_llm(self, reasoning_effort: str = "medium") -> LLMProvider:
+    def get_llm(self, reasoning_effort: str = "medium", force_simulation: bool = False) -> LLMProvider:
         """Return the LLM provider (real AIMLAPI when key is present).
 
         Args:
             reasoning_effort: Reasoning depth for DeepSeek V4 Pro —
                 "low" (fast/chatty), "medium" (balanced), "high" (deep analysis).
                 Ignored by simulated provider.
+            force_simulation: If True, return a simulated provider regardless
+                of API key presence. Used for demo/presentation mode.
         """
-        if self.settings.aiml_api_key:
+        if not force_simulation and self.settings.aiml_api_key:
             try:
                 from src.agent.tools.real.llm import AIMLAPIProvider
                 return AIMLAPIProvider(
@@ -48,9 +51,14 @@ class ToolProvider:
                 pass
         return SimulatedLLMProvider(self.company_context)
 
-    def get_search(self) -> SearchTool:
-        """Return a Bright Data SERP search tool when a key is configured."""
-        if self.settings.bright_data_api_key:
+    def get_search(self, force_simulation: bool = False) -> SearchTool:
+        """Return a Bright Data SERP search tool when a key is configured.
+
+        Args:
+            force_simulation: If True, return a simulated provider regardless
+                of API key presence.
+        """
+        if not force_simulation and self.settings.bright_data_api_key:
             try:
                 return BrightDataSearchTool(
                     api_key=self.settings.bright_data_api_key,

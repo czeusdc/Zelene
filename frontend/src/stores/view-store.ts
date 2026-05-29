@@ -1,8 +1,8 @@
 /**
  * @fileoverview Global Zustand store for the strategic-intelligence View.
  * Holds signals, entities, relationships, chat messages, UI state
- * (connection status, deployment phase, thinking indicator), and
- * focus state for dynamic panel emphasis.
+ * (connection status, deployment phase, thinking indicator, simulation
+ * flags), and focus state for dynamic panel emphasis.
  * Part of the Zelene strategic intelligence platform.
  */
 
@@ -19,10 +19,14 @@ interface ViewState {
   relationships: RelationshipEdge[];
   messages: ChatMessage[]; addMessage: (m: ChatMessage) => void;
   isThinking: boolean; setIsThinking: (t: boolean) => void;
+  /** True when the LLM is in simulation/demo mode (no AIMLAPI key used). */
+  llmSimulation: boolean;
+  /** True when Bright Data is in simulation/demo mode (no BD key used). */
+  dataSimulation: boolean;
   deploymentId: string | null; setDeploymentId: (id: string | null) => void;
   companyId: string | null; setCompanyId: (id: string | null) => void;
   connectionStatus: "connecting" | "connected" | "simulation" | "error"; setConnectionStatus: (s: ViewState["connectionStatus"]) => void;
-  phase: "deploying" | "gathering" | "analyzing" | "active"; setPhase: (p: ViewState["phase"]) => void;
+  phase: "deploying" | "gathering" | "analyzing" | "synthesizing" | "active"; setPhase: (p: ViewState["phase"]) => void;
   focusState: "signal" | "graph" | "chat" | "balanced"; setFocusState: (f: ViewState["focusState"]) => void;
   silence: boolean; setSilence: (v: boolean) => void;
 }
@@ -38,6 +42,7 @@ export const useViewStore = create<ViewState>((set) => ({
   messages: [],
   addMessage: (message) => set((s) => ({ messages: [...s.messages, message] })),
   isThinking: false, setIsThinking: (isThinking) => set({ isThinking }),
+  llmSimulation: false, dataSimulation: false,
   deploymentId: null, setDeploymentId: (id) => set({ deploymentId: id }),
   companyId: null, setCompanyId: (id) => set({ companyId: id }),
   connectionStatus: "connecting", setConnectionStatus: (s) => set({ connectionStatus: s }),

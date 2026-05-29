@@ -3,8 +3,9 @@
 This node scans for public web sources and signals related to the company
 and its competitors, broadcasting status updates via SSE. Each source
 is assigned a unique ID for downstream evidence provenance linking.
-When Bright Data is configured, real SERP searches run in parallel
-with the timing delay.
+When Bright Data is configured and not force-simulated, real SERP
+searches run in parallel with the timing delay. Simulation flags from
+the agent state are broadcast on node_start for frontend awareness.
 """
 
 import asyncio
@@ -18,7 +19,11 @@ from src.sse.manager import sse_manager
 async def deploy_node(state: AgentState) -> dict:
     """Search for relevant web sources and signal availability for the company."""
 
-    await sse_manager.broadcast(state["deployment_id"], "node_start", {"node": "deploy"})
+    await sse_manager.broadcast(state["deployment_id"], "node_start", {
+        "node": "deploy",
+        "llm_simulation": state.get("llm_simulation", False),
+        "data_simulation": state.get("data_simulation", False),
+    })
 
     company_context = {
         "company_name": state.get("company_name", ""),
@@ -26,9 +31,10 @@ async def deploy_node(state: AgentState) -> dict:
         "competitors": state.get("competitors", []),
     }
     provider = ToolProvider(company_context)
-    search_tool = provider.get_search()
 
-    llm_provider = provider.get_llm()
+    # Resolve tools — force_simulation bypasses API key checks when demo mode is active
+    search_tool = provider.get_search(force_simulation=state.get("data_simulation", False))
+    llm_provider = provider.get_llm(force_simulation=state.get("llm_simulation", False))
     query_generator = QueryGenerator(llm_provider)
 
     competitors = state.get("competitors", [])

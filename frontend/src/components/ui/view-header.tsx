@@ -8,7 +8,7 @@
 "use client";
 import { useViewStore } from "@/stores/view-store";
 
-const phaseLabels: Record<string, string> = { deploying: "Deploying", gathering: "Gathering Intelligence", analyzing: "Analyzing", active: "Active" };
+const phaseLabels: Record<string, string> = { deploying: "Deploying", gathering: "Gathering Intelligence", analyzing: "Analyzing", synthesizing: "Synthesizing Insights", active: "Active" };
 
 /**
  * ViewHeader — renders the View's top bar with phase badge, connection dot,

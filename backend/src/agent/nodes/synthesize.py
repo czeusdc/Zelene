@@ -65,11 +65,15 @@ async def synthesize_node(state: AgentState) -> dict:
         "competitors": state.get("competitors", []),
     }
     provider = ToolProvider(company_context)
-    llm = provider.get_llm(reasoning_effort="high")
+    llm = provider.get_llm(
+        reasoning_effort="high",
+        force_simulation=state.get("llm_simulation", False),
+    )
 
     template_insights = _build_template_insights(state)
     insights = template_insights
 
+    # Only the real provider exposes chat_structured — simulated falls through to templates
     is_real = not isinstance(llm, type) and hasattr(llm, "chat_structured")
     if is_real:
         prompt = SYNTHESIZE_PROMPT.format(
@@ -81,16 +85,19 @@ async def synthesize_node(state: AgentState) -> dict:
         )
 
         async def fetch_llm_insights():
+            """Call the LLM's structured-output endpoint for insight generation."""
             return await llm.chat_structured(
                 [AgentMessage(role="user", content=prompt)],
                 schema_description="JSON array of 2 insight objects with id, type, title, body, confidence, actions, reasoning",
             )
 
+        # LLM call runs concurrently with the 1.5s pacing delay
         llm_task = asyncio.create_task(fetch_llm_insights())
         await asyncio.sleep(1.5 * sse_manager.speed)
 
         try:
-            raw_insights = await asyncio.wait_for(llm_task, timeout=30.0)
+            # 120s timeout accommodates DeepSeek V4 Pro reasoning + 5-10KB payload
+            raw_insights = await asyncio.wait_for(llm_task, timeout=120.0)
             if isinstance(raw_insights, list) and len(raw_insights) >= 1:
                 for i, ins in enumerate(raw_insights):
                     ins.setdefault("id", f"ins_{i + 1}")

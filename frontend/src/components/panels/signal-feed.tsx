@@ -13,6 +13,7 @@ const statusMessages: Record<string, string> = {
   deploying: "Preparing intelligence deployment...",
   gathering: "Discovering signals across the web...",
   analyzing: "Analyzing extracted intelligence...",
+  synthesizing: "Synthesizing strategic insights...",
   active: "Intelligence environment active.",
 };
 

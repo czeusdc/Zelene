@@ -22,9 +22,16 @@ router = APIRouter(tags=["intelligence"])
 
 
 class DeployRequest(BaseModel):
-    """Request to start an intelligence-gathering deployment for a company."""
+    """Request to start an intelligence-gathering deployment for a company.
+
+    Simulation flags override API keys — when True, the system uses simulated
+    providers regardless of .env configuration. Defaults to False (use real
+    APIs if keys are present).
+    """
 
     company_id: str
+    llm_simulation: bool = False
+    data_simulation: bool = False
 
 
 @router.post("/api/intelligence/deploy")
@@ -47,6 +54,8 @@ async def deploy(req: DeployRequest, db: AsyncSession = Depends(get_db)):
         "industry": company.industry or "Technology", "competitors": company.competitors or [],
         "deployment_id": deployment_id, "signals": [], "entities": [], "relationships": [],
         "insights": [], "current_stage": "deploy", "signals_found": 0, "relationships_mapped": 0,
+        "web_sources": [], "goals": company.business_goals or [],
+        "llm_simulation": req.llm_simulation, "data_simulation": req.data_simulation,
     }
 
     async def _run_deployment():
@@ -58,20 +67,19 @@ async def deploy(req: DeployRequest, db: AsyncSession = Depends(get_db)):
         try:
             graph = build_graph()
             await graph.ainvoke(initial_state, config={"configurable": {"thread_id": deployment_id}})
-            # Success — update DB and broadcast completion
             await sse_manager.broadcast(deployment_id, "complete", {"phase": "active"})
-            async with async_session() as db:
-                deployment_row = await db.get(Deployment, UUID(deployment_id))
-                if deployment_row:
-                    deployment_row.status = "completed"
-                    await db.commit()
+            async with async_session() as session:
+                dep = await session.get(Deployment, UUID(deployment_id))
+                if dep:
+                    dep.status = "completed"
+                    await session.commit()
         except Exception as e:
             await sse_manager.broadcast(deployment_id, "error", {"message": str(e), "phase": "failed"})
-            async with async_session() as db:
-                deployment_row = await db.get(Deployment, UUID(deployment_id))
-                if deployment_row:
-                    deployment_row.status = "failed"
-                    await db.commit()
+            async with async_session() as session:
+                dep = await session.get(Deployment, UUID(deployment_id))
+                if dep:
+                    dep.status = "failed"
+                    await session.commit()
 
     asyncio.create_task(_run_deployment())
 

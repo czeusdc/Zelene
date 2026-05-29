@@ -51,7 +51,7 @@ class AIMLAPIProvider(LLMProvider):
         self.max_tokens = 4096
         self.reasoning_effort = reasoning_effort
         self._client = httpx.AsyncClient(
-            timeout=httpx.Timeout(60.0, connect=10.0),
+            timeout=httpx.Timeout(120.0, connect=10.0),
             limits=httpx.Limits(max_keepalive_connections=5),
         )
 
@@ -126,6 +126,10 @@ class AIMLAPIProvider(LLMProvider):
     @staticmethod
     def _extract_text(data: dict) -> str:
         """Extract the model's text response from the API response.
+
+        Only the final ``content`` field is returned — ``reasoning_content``
+        (DeepSeek V4 Pro's internal thinking tokens) is discarded to save
+        bandwidth and avoid exposing raw analysis to the user.
 
         Args:
             data: Parsed JSON response from AIMLAPI.

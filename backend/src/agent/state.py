@@ -27,3 +27,5 @@ class AgentState(TypedDict):
     relationships_mapped: int
     web_sources: list[dict]
     goals: list[str]
+    llm_simulation: bool     # True = force simulated LLM (demo mode)
+    data_simulation: bool    # True = force simulated Bright Data (demo mode)

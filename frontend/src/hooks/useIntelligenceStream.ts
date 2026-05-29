@@ -35,6 +35,7 @@ export function useIntelligenceStream() {
   const addMessage = useViewStore((s) => s.addMessage);
   const setConnectionStatus = useViewStore((s) => s.setConnectionStatus);
   const setPhase = useViewStore((s) => s.setPhase);
+  const setIsThinking = useViewStore((s) => s.setIsThinking);
   const setSilence = useViewStore((s) => s.setSilence);
 
   useEffect(() => {
@@ -75,12 +76,26 @@ export function useIntelligenceStream() {
 
     source.addEventListener("node_start", (e) => {
       const data = JSON.parse(e.data);
-      if (data.node === "deploy" || data.node === "extract") setPhase("gathering");
-      else if (data.node === "classify" || data.node === "verify") setPhase("analyzing");
+      // Map each pipeline node to a user-facing phase label
+      if (data.node === "deploy") {
+        setPhase("gathering");
+        // Capture simulation flags from the deploy node for future UI (force-sim toggle)
+        if (data.llm_simulation || data.data_simulation) {
+          useViewStore.setState({ llmSimulation: data.llm_simulation, dataSimulation: data.data_simulation });
+        }
+      } else if (data.node === "extract") {
+        setPhase("gathering");
+      } else if (data.node === "classify" || data.node === "verify") {
+        setPhase("analyzing");
+      } else if (data.node === "synthesize") {
+        setPhase("synthesizing");
+        setIsThinking(true);  // synthesis is the 120s LLM call — show thinking state
+      }
     });
 
     source.addEventListener("complete", () => {
       setPhase("active");
+      setIsThinking(false);
       setConnectionStatus("connected");
       setSilence(true);
       setTimeout(() => {
