@@ -50,9 +50,16 @@ class BrightDataSearchTool(SearchTool):
 
         results = []
         for item in response.data[:num_results]:
-            results.append({
-                "title": getattr(item, "title", ""),
-                "url": getattr(item, "link", ""),
-                "snippet": getattr(item, "description", ""),
-            })
+            if isinstance(item, dict):
+                results.append({
+                    "title": item.get("title", ""),
+                    "url": item.get("url", ""),
+                    "snippet": item.get("description", ""),
+                })
+            else:
+                results.append({
+                    "title": getattr(item, "title", ""),
+                    "url": getattr(item, "link", "") or getattr(item, "url", ""),
+                    "snippet": getattr(item, "description", ""),
+                })
         return results

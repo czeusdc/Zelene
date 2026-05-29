@@ -27,8 +27,8 @@ export function StatusBar() {
       style={{
         height: 28,
         background: "hsl(var(--surface-base))",
-        color: "hsl(var(--text-muted))",
-        opacity: 0.5,
+        color: "hsl(var(--text-secondary))",
+        opacity: 0.85,
         letterSpacing: "0.15em",
         borderTop: "1px solid hsl(var(--text-muted) / 0.06)",
       }}

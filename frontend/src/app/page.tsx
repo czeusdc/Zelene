@@ -177,7 +177,7 @@ export default function Home() {
           letterSpacing: "0.05em",
         }}
       >
-        Powered by Bright Data &nbsp;&middot;&nbsp; Gemini
+        Powered by Bright Data
       </div>
     </main>
   );
