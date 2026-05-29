@@ -18,23 +18,23 @@ interface Message { id: string; role: "zelene" | "user"; content: string; }
 let msgCounter = 0;
 
 /** Zelene's full greeting — shown immediately without an API call. */
-const GREETING = [
-  "Welcome. I'm Zelene, your strategic intelligence presence.",
-  "Think of me as an analyst who continuously observes your market on your behalf — competitors, risks, opportunities, sentiment shifts.",
-  "To begin, I'd like to understand your business. Tell me about your company. What do you do, and in what industry?",
-];
+const GREETING =
+  "Welcome. I'm Zelene, your strategic intelligence presence.\n\n" +
+  "Think of me as an analyst who continuously observes your market on your behalf — competitors, risks, opportunities, sentiment shifts.\n\n" +
+  "To begin, I'd like to understand your business. Tell me about your company. What do you do, and in what industry?";
 
 export default function OnboardingPage() {
   const router = useRouter();
-  const [messages, setMessages] = useState<Message[]>(() =>
-    GREETING.map((g) => ({ id: String(++msgCounter), role: "zelene" as const, content: g }))
-  );
+  const [messages, setMessages] = useState<Message[]>(() => [
+    { id: String(++msgCounter), role: "zelene" as const, content: GREETING },
+  ]);
   const [stage, setStage] = useState("introduction");
   const [context, setContext] = useState<Record<string, unknown>>({});
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [isThinking, setIsThinking] = useState(false);
   const [showContext, setShowContext] = useState(false);
   const [confirmError, setConfirmError] = useState(false);
+  const [isConfirming, setIsConfirming] = useState(false);
 
   const addMessage = useCallback((role: "zelene" | "user", content: string) => {
     setMessages((prev) => [...prev, { id: String(++msgCounter), role, content }]);
@@ -44,7 +44,7 @@ export default function OnboardingPage() {
     addMessage("user", text);
     setIsThinking(true);
     try {
-      const res = await api.onboard(text, sessionId);
+      const res = await api.onboard(text, sessionId ?? undefined);
       if (!sessionId) setSessionId(res.session_id);
       setContext(res.context_so_far);
 
@@ -62,7 +62,7 @@ export default function OnboardingPage() {
 
       if (hasCompetitors && hasGoals && hasName) {
         setStage("confirm");
-        setTimeout(() => setShowContext(true), 600);
+        setTimeout(() => setShowContext(true), 2500);
       } else if (hasCompetitors) {
         setStage("goals");
       } else if (hasName) {
@@ -78,11 +78,16 @@ export default function OnboardingPage() {
   }, [sessionId, addMessage]);
 
   const handleConfirm = async () => {
-    if (!sessionId) return;
+    if (!sessionId || isConfirming) return;
+    setIsConfirming(true);
+    setConfirmError(false);
     try {
       const res = await api.saveCompany(sessionId);
       router.push(`/view?company_id=${res.company_id}`);
-    } catch { setConfirmError(true); }
+    } catch {
+      setConfirmError(true);
+      setIsConfirming(false);
+    }
   };
 
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
@@ -107,6 +112,7 @@ export default function OnboardingPage() {
             addMessage("zelene", "Of course. What would you like to adjust?");
           }}
           error={confirmError}
+          isConfirming={isConfirming}
         />
       )}
       {!showContext && (

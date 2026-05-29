@@ -42,7 +42,19 @@ export function ZeleneChat() {
   };
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full overflow-hidden">
+      <div className="px-4 pt-4 pb-2">
+        <span
+          className="text-xs uppercase"
+          style={{
+            color: "hsl(var(--accent-primary))",
+            opacity: 0.6,
+            letterSpacing: "0.2em",
+          }}
+        >
+          Zelene
+        </span>
+      </div>
       <div className="flex-1 overflow-y-auto p-4">
         {messages.length === 0 && (
           <div className="flex items-center justify-center h-full">
@@ -55,6 +67,9 @@ export function ZeleneChat() {
               <div className="rounded-xl px-4 py-2.5 max-w-[80%] text-sm" style={{ background: "hsl(var(--accent-primary) / 0.12)", color: "hsl(var(--text-primary))" }}>{msg.content}</div>
             </div>
           ) : (
+            // Coerce ChatMessage into an Insight shape for ZeleneMessage.
+            // The title is derived from the first paragraph of the reply;
+            // confidence defaults to 0.8 since chat responses aren't scored.
             <ZeleneMessage key={msg.id} insight={{ id: msg.id, type: "observation", title: msg.content.split("\n\n")[0] || msg.content.slice(0, 100), body: msg.content, confidence: 0.8, evidence_signals: [], actions: ["monitor", "generate_brief", "dismiss"] }} onAction={(a) => console.log("Action:", a)} />
           )
         )}

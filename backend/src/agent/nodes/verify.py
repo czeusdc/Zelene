@@ -13,7 +13,7 @@ async def verify_node(state: AgentState) -> dict:
     """Verify signal confidence scores and resolve conflicting signals."""
 
     await sse_manager.broadcast(state["deployment_id"], "node_start", {"node": "verify"})
-    await asyncio.sleep(0.5 / sse_manager.speed)
+    await asyncio.sleep(0.5 * sse_manager.speed)
     signals = state.get("signals", [])
     high_conf = len([s for s in signals if s.get("confidence", 0) >= 0.7])
     await sse_manager.broadcast(state["deployment_id"], "signal", {

@@ -11,7 +11,7 @@ from pydantic import BaseModel
 from uuid import UUID
 from src.db.connection import get_db
 from src.db.models import UserSettings
-from src.config import get_settings
+from src.config import get_settings as get_env_settings
 
 router = APIRouter(prefix="/api/settings", tags=["settings"])
 
@@ -38,7 +38,7 @@ async def get_settings(company_id: str, db: AsyncSession = Depends(get_db)):
     if not settings:
         raise HTTPException(status_code=404, detail="Settings not found")
 
-    env_settings = get_settings()
+    env_settings = get_env_settings()
     return {
         "gemini_model": settings.gemini_model,
         "has_api_key": bool(env_settings.gemini_api_key),

@@ -7,7 +7,7 @@
 "use client";
 import { motion } from "framer-motion";
 
-interface Props { context: Record<string, unknown>; onConfirm: () => void; onAdjust: () => void; error?: boolean; }
+interface Props { context: Record<string, unknown>; onConfirm: () => void; onAdjust: () => void; error?: boolean; isConfirming?: boolean; }
 
 function Card({ label, value }: { label: string; value: string | string[] }) {
   const display = Array.isArray(value) ? value.join(", ") : value;
@@ -26,7 +26,7 @@ function Card({ label, value }: { label: string; value: string | string[] }) {
  * ContextReveal — shows extracted company profile fields as cards
  * with Confirm / Adjust action buttons.
  */
-export function ContextReveal({ context, onConfirm, onAdjust, error }: Props) {
+export function ContextReveal({ context, onConfirm, onAdjust, error, isConfirming }: Props) {
   const items = [
     { label: "Company", value: context.company_name as string },
     { label: "Industry", value: context.industry as string },
@@ -44,14 +44,14 @@ export function ContextReveal({ context, onConfirm, onAdjust, error }: Props) {
       </div>
       {error && <p className="text-xs text-red-400 mb-4">Unable to save your profile. Please try again.</p>}
       <div className="flex gap-3">
-        <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
-          onClick={onConfirm} className="rounded-lg px-6 py-2.5 text-sm font-medium"
-          style={{ background: "hsl(var(--accent-primary))", color: "hsl(var(--text-primary))" }}>
-          Yes, continue
+        <motion.button whileHover={isConfirming ? {} : { scale: 1.02 }} whileTap={isConfirming ? {} : { scale: 0.98 }}
+          onClick={onConfirm} disabled={isConfirming} className="rounded-lg px-6 py-2.5 text-sm font-medium"
+          style={{ background: "hsl(var(--accent-primary))", color: "white", opacity: isConfirming ? 0.6 : 1 }}>
+          {isConfirming ? "Saving..." : "Yes, continue"}
         </motion.button>
-        <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
-          onClick={onAdjust} className="rounded-lg px-6 py-2.5 text-sm"
-          style={{ background: "hsl(var(--surface-overlay))", color: "hsl(var(--text-secondary))" }}>
+        <motion.button whileHover={isConfirming ? {} : { scale: 1.02 }} whileTap={isConfirming ? {} : { scale: 0.98 }}
+          onClick={onAdjust} disabled={isConfirming} className="rounded-lg px-6 py-2.5 text-sm"
+          style={{ background: "hsl(var(--surface-overlay))", color: "hsl(var(--text-secondary))", opacity: isConfirming ? 0.4 : 1 }}>
           Let me adjust
         </motion.button>
       </div>

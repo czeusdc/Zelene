@@ -50,10 +50,21 @@ async def deploy(req: DeployRequest, db: AsyncSession = Depends(get_db)):
     }
 
     async def _run_deployment():
-        """Execute the intelligence graph and handle failures gracefully."""
+        """Execute the intelligence graph and handle failures gracefully.
+
+        Broadcasts a ``complete`` event and updates the DB record on success,
+        or broadcasts an ``error`` event and marks the deployment as failed.
+        """
         try:
             graph = build_graph()
             await graph.ainvoke(initial_state, config={"configurable": {"thread_id": deployment_id}})
+            # Success — update DB and broadcast completion
+            await sse_manager.broadcast(deployment_id, "complete", {"phase": "active"})
+            async with async_session() as db:
+                deployment_row = await db.get(Deployment, UUID(deployment_id))
+                if deployment_row:
+                    deployment_row.status = "completed"
+                    await db.commit()
         except Exception as e:
             await sse_manager.broadcast(deployment_id, "error", {"message": str(e), "phase": "failed"})
             async with async_session() as db:

@@ -32,8 +32,11 @@ class ToolProvider:
     def get_llm(self) -> LLMProvider:
         """Return the LLM provider (real Gemini when key is present)."""
         if self.settings.gemini_api_key:
-            # TODO: Replace with real GeminiProvider when implemented
-            return SimulatedLLMProvider(self.company_context)
+            try:
+                from src.agent.tools.real.llm import GeminiProvider
+                return GeminiProvider(api_key=self.settings.gemini_api_key)
+            except Exception:
+                pass
         return SimulatedLLMProvider(self.company_context)
 
     def get_search(self) -> SearchTool:

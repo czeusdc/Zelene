@@ -13,7 +13,7 @@ async def classify_node(state: AgentState) -> dict:
     """Classify signals by cross-referencing against known market patterns."""
 
     await sse_manager.broadcast(state["deployment_id"], "node_start", {"node": "classify"})
-    await asyncio.sleep(1 / sse_manager.speed)
+    await asyncio.sleep(1 * sse_manager.speed)
     await sse_manager.broadcast(state["deployment_id"], "signal", {
         "type": "status", "title": "Cross-referencing with historical patterns...",
         "content": "Comparing extracted signals against known market behavior.",

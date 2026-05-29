@@ -4,15 +4,31 @@ This module provides the conversational onboarding flow that collects company
 profile information from the user and persists it to the database.
 """
 
+import logging
 from uuid import uuid4, UUID
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from pydantic import BaseModel
 from src.db.connection import get_db
 from src.db.models import CompanyProfile, UserSettings
-from src.agent.tools.simulated.llm import SimulatedLLMProvider
+from src.agent.tools.registry import ToolProvider
+from src.agent.tools.simulated.llm import SimulatedLLMProvider, _extract_company_name, _infer_industry
+from src.agent.personality import filter_tone
+from src.agent.tools.real.prompts import ONBOARDING_PROMPT
+from src.agent.tools.base import AgentMessage
 
 router = APIRouter(prefix="/api/company", tags=["company"])
+
+VALID_STAGES = ["introduction", "company", "competitors", "goals", "confirm", "complete"]
+STAGE_TRANSITIONS = {
+    "introduction": "company",
+    "company": "competitors",
+    "competitors": "goals",
+    "goals": "confirm",
+    "confirm": "complete",
+}
+
+logger = logging.getLogger(__name__)
 
 
 class OnboardRequest(BaseModel):
@@ -37,6 +53,20 @@ class SaveCompanyRequest(BaseModel):
 
 onboarding_sessions: dict[str, dict] = {}
 
+
+def _get_stage_instructions(stage: str) -> str:
+    """Return guidance text for the current onboarding stage."""
+    instructions = {
+        "introduction": "Greet the user warmly and ask them to describe their company and what they do. Extract the company name from their response.",
+        "company": "Ask what makes their company different from others in the field. Acknowledge their unique positioning.",
+        "competitors": "Ask who their main competitors are. They can list multiple names.",
+        "goals": "Ask about their key business goals and priorities for the coming quarters.",
+        "confirm": "Summarize what you've understood and ask them to confirm the details are correct.",
+        "complete": "Let them know their intelligence environment is ready.",
+    }
+    return instructions.get(stage, "Continue the conversation naturally.")
+
+
 @router.post("/onboard", response_model=OnboardResponse)
 async def onboard(req: OnboardRequest):
     """Process a chat turn in the conversational onboarding flow."""
@@ -47,10 +77,69 @@ async def onboard(req: OnboardRequest):
         "stage": "introduction",
     })
 
-    llm = SimulatedLLMProvider(session)
-    reply, updated, next_stage = llm.onboarding_turn(req.message, session)
-    session.update(updated)
-    session["stage"] = next_stage
+    provider = ToolProvider(session)
+    llm = provider.get_llm()
+
+    if isinstance(llm, SimulatedLLMProvider):
+        reply, updated, next_stage = llm.onboarding_turn(req.message, session)
+        session.update(updated)
+        session["stage"] = next_stage
+    else:
+        try:
+            stage = session.get("stage", "introduction")
+            stage_instructions = _get_stage_instructions(stage)
+            prompt = ONBOARDING_PROMPT.format(
+                stage=stage,
+                company_name=session.get("company_name") or "unknown",
+                industry=session.get("industry") or "unknown",
+                competitors=", ".join(session.get("competitors", [])) or "none yet",
+                goals=", ".join(session.get("goals", [])) or "none yet",
+                user_message=req.message,
+                stage_instructions=stage_instructions,
+            )
+            result = await llm.chat_structured(
+                [AgentMessage(role="user", content=prompt)],
+                schema_description='JSON object with "reply" (string), "context_updates" (object with optional company_name, industry, competitors, goals), "next_stage" (string)',
+            )
+
+            reply = filter_tone(result.get("reply", ""))
+            context_updates = result.get("context_updates", {})
+            proposed_stage = result.get("next_stage", stage)
+
+            if context_updates.get("company_name"):
+                session["company_name"] = context_updates["company_name"]
+            elif not session.get("company_name") and stage == "introduction":
+                session["company_name"] = _extract_company_name(req.message)
+
+            if context_updates.get("industry"):
+                session["industry"] = context_updates["industry"]
+            elif not session.get("industry") and stage == "introduction":
+                session["industry"] = _infer_industry(req.message)
+
+            if context_updates.get("competitors"):
+                existing = session.get("competitors", [])
+                session["competitors"] = list(set(existing + context_updates["competitors"]))
+
+            if context_updates.get("goals"):
+                session["goals"] = context_updates["goals"]
+
+            if stage == "introduction":
+                session["description"] = req.message
+
+            if proposed_stage in VALID_STAGES and proposed_stage == STAGE_TRANSITIONS.get(stage, stage):
+                next_stage = proposed_stage
+            else:
+                next_stage = stage
+
+            session["stage"] = next_stage
+
+        except Exception as exc:
+            logger.warning("Gemini onboarding failed, falling back to simulated: %s", exc)
+            fallback = SimulatedLLMProvider(session)
+            reply, updated, next_stage = fallback.onboarding_turn(req.message, session)
+            session.update(updated)
+            session["stage"] = next_stage
+
     onboarding_sessions[session_id] = session
 
     return OnboardResponse(

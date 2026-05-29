@@ -8,6 +8,7 @@
 @import "tailwindcss";
 
 @layer base {
+  /* ── Default (dark) theme — used unless .light is present ────────────────── */
   :root {
     --surface-base: 220 20% 6%;
     --surface-elevated: 220 20% 9%;
@@ -21,11 +22,14 @@
     --signal-warning: 42 80% 55%;
     --signal-critical: 0 72% 51%;
     --signal-info: 220 40% 55%;
-    --font-sans: 'Inter', system-ui, sans-serif;
-    --font-mono: 'JetBrains Mono', monospace;
     --radius: 0.5rem;
+    /* Breathe glow layers — indigo/teal radial gradients for the landing bg */
+    --breathe-glow-1: radial-gradient(ellipse at 30% 40%, hsla(228, 56%, 52%, 0.08) 0%, transparent 55%);
+    --breathe-glow-2: radial-gradient(ellipse at 70% 60%, hsla(180, 45%, 40%, 0.05) 0%, transparent 50%);
+    --breathe-glow-3: radial-gradient(ellipse at 50% 80%, hsla(228, 56%, 52%, 0.06) 0%, transparent 45%);
   }
 
+  /* ── Light theme (applied via .light on <html>) ────────────────────────── */
   .light {
     --surface-base: 0 0% 98%;
     --surface-elevated: 0 0% 100%;
@@ -33,6 +37,10 @@
     --text-primary: 220 20% 10%;
     --text-secondary: 220 10% 40%;
     --text-muted: 220 8% 55%;
+    /* Softer glow in light mode — less contrast needed against bright bg */
+    --breathe-glow-1: radial-gradient(ellipse at 30% 40%, hsla(228, 56%, 52%, 0.045) 0%, transparent 55%);
+    --breathe-glow-2: radial-gradient(ellipse at 70% 60%, hsla(180, 45%, 40%, 0.025) 0%, transparent 50%);
+    --breathe-glow-3: radial-gradient(ellipse at 50% 80%, hsla(228, 56%, 52%, 0.035) 0%, transparent 45%);
   }
 
   body {
@@ -67,4 +75,39 @@
 
 @utility animate-fade-in-up {
   animation: fade-in-up 0.4s ease-out forwards;
+}
+
+/* Shifts radial-gradient positions to create a slow "inhale/exhale" feel */
+@keyframes breathe {
+  0%, 100% { background-position: 0% 50%, 100% 50%; }
+  50% { background-position: 100% 50%, 0% 50%; }
+}
+
+/* Subtle opacity pulse used on the teal-highlighted "E" letters in ZELENE */
+@keyframes letter-breath {
+  0%, 100% { opacity: 0.7; }
+  50% { opacity: 1; }
+}
+
+/* Looping translate path for floating background particles */
+@keyframes drift {
+  0% { transform: translate(0, 0); }
+  25% { transform: translate(10px, -8px); }
+  50% { transform: translate(-6px, 12px); }
+  75% { transform: translate(8px, 6px); }
+  100% { transform: translate(0, 0); }
+}
+
+@keyframes orbit-bg {
+  0% { background-position: 0% 50%, 100% 50%; }
+  50% { background-position: 100% 50%, 0% 50%; }
+  100% { background-position: 0% 50%, 100% 50%; }
+}
+
+.silence-overlay {
+  background: rgba(0, 0, 0, 0.15);
+}
+
+.light .silence-overlay {
+  background: rgba(0, 0, 0, 0.06);
 }

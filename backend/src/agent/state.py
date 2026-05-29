@@ -25,3 +25,5 @@ class AgentState(TypedDict):
     current_stage: str
     signals_found: int
     relationships_mapped: int
+    web_sources: list[dict]
+    goals: list[str]

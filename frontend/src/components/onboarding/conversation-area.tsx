@@ -1,19 +1,22 @@
 /**
  * @fileoverview Scrollable chat area for the onboarding flow.
  * Renders Zelene prompts and user replies with fade-in animation,
- * and auto-scrolls to the latest message.
+ * typing text reveal for Zelene messages, and auto-scrolls to the
+ * latest message.
  * Part of the Zelene strategic intelligence platform.
  */
 
 "use client";
 import { useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { TypingText } from "@/components/ui/typing-text";
 
 interface Message { id: string; role: "zelene" | "user"; content: string; }
 
 /**
  * ConversationArea — lists onboarding messages with staggered
- * entry animations and a "thinking" indicator when Zelene is processing.
+ * entry animations, typing reveal for Zelene messages, and a
+ * "thinking" indicator when Zelene is processing.
  */
 export function ConversationArea({ messages, isThinking }: { messages: Message[]; isThinking: boolean }) {
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -26,7 +29,9 @@ export function ConversationArea({ messages, isThinking }: { messages: Message[]
           <motion.div key={msg.id} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 * (messages.length - 1 - i), duration: 0.4 }} className="mb-6">
             {msg.role === "zelene" ? (
-              <p className="text-sm leading-relaxed" style={{ color: "hsl(var(--text-primary))" }}>{msg.content}</p>
+              <p className="text-sm leading-relaxed" style={{ color: "hsl(var(--text-primary))", whiteSpace: "pre-line" }}>
+                <TypingText text={msg.content} messageId={msg.id} speed={20} />
+              </p>
             ) : (
               <div className="flex justify-end">
                 <div className="max-w-[80%] rounded-xl px-4 py-2.5 text-sm"

@@ -26,7 +26,7 @@ export function ViewHeader({ onSettingsClick }: { onSettingsClick: () => void })
           <span className="text-xs" style={{ color: "hsl(var(--text-muted))" }}>{phaseLabels[phase]}</span>
         </div>
       </div>
-      <button onClick={onSettingsClick} className="rounded-lg p-2 text-xs hover:opacity-70" style={{ color: "hsl(var(--text-muted))" }}>{"\u2699"}</button>
+      <button onClick={onSettingsClick} className="rounded-lg p-2 text-lg transition-all hover:brightness-125" style={{ color: "hsl(var(--text-muted))" }}>{"\u2699"}</button>
     </header>
   );
 }
