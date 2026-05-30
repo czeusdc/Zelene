@@ -36,6 +36,7 @@ class OnboardRequest(BaseModel):
 
     message: str
     session_id: str | None = None
+    simulation: bool = False
 
 
 class OnboardResponse(BaseModel):
@@ -106,7 +107,7 @@ async def onboard(req: OnboardRequest):
     })
 
     provider = ToolProvider(session)
-    llm = provider.get_llm()
+    llm = provider.get_llm(force_simulation=req.simulation)
 
     if isinstance(llm, SimulatedLLMProvider):
         reply, updated, next_stage = llm.onboarding_turn(req.message, session)

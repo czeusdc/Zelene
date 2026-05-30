@@ -19,9 +19,9 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
 export const api = {
   health: () => request<{ status: string }>("/api/health"),
 
-  onboard: (message: string, sessionId?: string) =>
+  onboard: (message: string, sessionId?: string, simulation?: boolean) =>
     request<{ reply: string; session_id: string; context_so_far: Record<string, unknown> }>(
-      "/api/company/onboard", { method: "POST", body: JSON.stringify({ message, session_id: sessionId }) }
+      "/api/company/onboard", { method: "POST", body: JSON.stringify({ message, session_id: sessionId, simulation: simulation ?? false }) }
     ),
 
   saveCompany: (companyId: string) =>
@@ -59,4 +59,9 @@ export const api = {
 
   intelligenceStreamUrl: (deploymentId: string) =>
     `${BASE_URL}/api/intelligence/stream?deployment_id=${deploymentId}`,
+
+  generateBriefing: (companyId: string) =>
+    request<import("./types").Briefing>("/api/briefing/generate", {
+      method: "POST", body: JSON.stringify({ company_id: companyId }),
+    }),
 };

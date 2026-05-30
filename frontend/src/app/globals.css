@@ -111,3 +111,21 @@
 .light .silence-overlay {
   background: rgba(0, 0, 0, 0.06);
 }
+
+@utility section-divider {
+  border-top: 1px solid hsl(var(--accent-primary) / 0.08);
+}
+
+.light .section-divider {
+  border-top-color: hsl(var(--accent-primary) / 0.12);
+}
+
+/* Subtle intelligence flow dot that travels across the three-panel schematic */
+@keyframes signal-flow {
+  0%   { left: 12.5%; opacity: 0; }
+  12%  { opacity: 0.35; }
+  40%  { left: 50%; opacity: 0.35; }
+  60%  { left: 50%; opacity: 0.35; }
+  88%  { opacity: 0; }
+  100% { left: 87.5%; opacity: 0; }
+}

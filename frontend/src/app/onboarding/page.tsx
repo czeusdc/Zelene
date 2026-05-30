@@ -6,13 +6,22 @@
  */
 
 "use client";
-import { useState, useCallback, FormEvent } from "react";
+import { useState, useCallback, FormEvent, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { OnboardingLayout } from "@/components/onboarding/onboarding-layout";
 import { ConversationArea } from "@/components/onboarding/conversation-area";
 import { ContextReveal } from "@/components/onboarding/context-reveal";
 import { api } from "@/lib/api";
+
+/** Stage-specific pre-filled text for simulated mode. */
+const SIMULATION_PREFILLS: Record<string, string> = {
+  introduction: "Acme Corp — enterprise software for logistics",
+  company: "We focus on real-time data integration and speed",
+  competitors: "Salesforce, HubSpot, Monday.com",
+  goals: "Market expansion, product launch, competitive positioning",
+  confirm: "",
+};
 
 interface Message { id: string; role: "zelene" | "user"; content: string; }
 let msgCounter = 0;
@@ -35,6 +44,26 @@ export default function OnboardingPage() {
   const [showContext, setShowContext] = useState(false);
   const [confirmError, setConfirmError] = useState(false);
   const [isConfirming, setIsConfirming] = useState(false);
+  const [isSimulation, setIsSimulation] = useState(false);
+  const [inputValue, setInputValue] = useState("");
+
+  // Read simulation flag from localStorage on mount.
+  useEffect(() => {
+    const sim = localStorage.getItem("zelene_simulation_mode");
+    if (sim === "true") {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setIsSimulation(true);
+      setInputValue(SIMULATION_PREFILLS["introduction"]);
+    }
+  }, []);
+
+  // Update pre-filled input when stage changes in simulation mode.
+  useEffect(() => {
+    if (isSimulation) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setInputValue(SIMULATION_PREFILLS[stage] || "");
+    }
+  }, [stage, isSimulation]);
 
   const addMessage = useCallback((role: "zelene" | "user", content: string) => {
     setMessages((prev) => [...prev, { id: String(++msgCounter), role, content }]);
@@ -44,7 +73,7 @@ export default function OnboardingPage() {
     addMessage("user", text);
     setIsThinking(true);
     try {
-      const res = await api.onboard(text, sessionId ?? undefined);
+      const res = await api.onboard(text, sessionId ?? undefined, isSimulation);
       if (!sessionId) setSessionId(res.session_id);
       setContext(res.context_so_far);
 
@@ -75,7 +104,7 @@ export default function OnboardingPage() {
     } finally {
       setIsThinking(false);
     }
-  }, [sessionId, addMessage]);
+  }, [sessionId, addMessage, isSimulation]);
 
   const handleConfirm = async () => {
     if (!sessionId || isConfirming) return;
@@ -92,10 +121,9 @@ export default function OnboardingPage() {
 
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const input = e.currentTarget.elements.namedItem("message") as HTMLInputElement;
-    const text = input.value.trim();
+    const text = inputValue.trim();
     if (!text) return;
-    input.value = "";
+    setInputValue("");
     sendMessage(text);
   };
 
@@ -129,6 +157,8 @@ export default function OnboardingPage() {
               autoFocus
               autoComplete="off"
               placeholder="Type your response..."
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
               disabled={isThinking}
               className="flex-1 rounded-xl px-4 py-3 text-sm outline-none"
               style={{
