@@ -13,10 +13,16 @@ from src.agent.nodes.classify import classify_node
 from src.agent.nodes.verify import verify_node
 from src.agent.nodes.relate import relate_node
 from src.agent.nodes.synthesize import synthesize_node
+from src.agent.nodes.memory import memory_node
 
 
 def build_graph():
-    """Build and compile the intelligence pipeline graph with all nodes."""
+    """Build and compile the intelligence pipeline graph with all nodes.
+
+    Pipeline: deploy -> extract -> classify -> verify -> relate -> synthesize -> memory
+    The memory node persists all intelligence to Cognee's knowledge graph
+    after synthesis completes.
+    """
 
     workflow = StateGraph(AgentState)
     workflow.add_node("deploy", deploy_node)
@@ -25,6 +31,7 @@ def build_graph():
     workflow.add_node("verify", verify_node)
     workflow.add_node("relate", relate_node)
     workflow.add_node("synthesize", synthesize_node)
+    workflow.add_node("memory", memory_node)
 
     workflow.set_entry_point("deploy")
     workflow.add_edge("deploy", "extract")
@@ -32,6 +39,7 @@ def build_graph():
     workflow.add_edge("classify", "verify")
     workflow.add_edge("verify", "relate")
     workflow.add_edge("relate", "synthesize")
-    workflow.add_edge("synthesize", END)
+    workflow.add_edge("synthesize", "memory")
+    workflow.add_edge("memory", END)
 
     return workflow.compile(checkpointer=MemorySaver())

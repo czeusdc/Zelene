@@ -8,7 +8,7 @@
  */
 
 import { create } from "zustand";
-import { Signal, Entity, RelationshipEdge, ChatMessage, Source, Insight } from "@/lib/types";
+import { Signal, Entity, RelationshipEdge, ChatMessage, Source, Insight, Briefing, MemoryStatus } from "@/lib/types";
 
 /** Insight tracking states for the single evolving presence right panel. */
 type InsightState = "emerging" | "presenting" | "acknowledged" | "dismissed";
@@ -44,6 +44,14 @@ interface ViewState {
   insightStates: Record<string, InsightState>; setInsightState: (id: string, state: InsightState) => void;
   /** Current intelligence discovery phase — drives the visible process indicator in the signal feed. */
   discoveryPhase: DiscoveryPhase; setDiscoveryPhase: (p: DiscoveryPhase) => void;
+  /** Memory status — whether intelligence has been persisted to Cognee. */
+  memoryStatus: MemoryStatus | null; setMemoryStatus: (m: MemoryStatus | null) => void;
+  /** Strategic briefing generated from all intelligence. */
+  briefing: Briefing | null; setBriefing: (b: Briefing | null) => void;
+  /** Whether a briefing is currently being generated. */
+  briefingLoading: boolean; setBriefingLoading: (v: boolean) => void;
+  /** Whether the briefing panel is visible. */
+  briefingOpen: boolean; setBriefingOpen: (v: boolean) => void;
 }
 
 export const useViewStore = create<ViewState>((set) => ({
@@ -69,4 +77,8 @@ export const useViewStore = create<ViewState>((set) => ({
   activeInsightId: null, setActiveInsight: (id) => set({ activeInsightId: id }),
   insightStates: {}, setInsightState: (id, state) => set((s) => ({ insightStates: { ...s.insightStates, [id]: state } })),
   discoveryPhase: "idle", setDiscoveryPhase: (p) => set({ discoveryPhase: p }),
+  memoryStatus: null, setMemoryStatus: (m) => set({ memoryStatus: m }),
+  briefing: null, setBriefing: (b) => set({ briefing: b }),
+  briefingLoading: false, setBriefingLoading: (v) => set({ briefingLoading: v }),
+  briefingOpen: false, setBriefingOpen: (v) => set({ briefingOpen: v }),
 }));

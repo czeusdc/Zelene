@@ -11,6 +11,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Insight } from "@/lib/types";
 import { TypingText } from "@/components/ui/typing-text";
 import { useViewStore } from "@/stores/view-store";
+import { api } from "@/lib/api";
 import { useEffect, useRef } from "react";
 
 /**
@@ -51,6 +52,21 @@ export function InsightCard({
   const handleMonitor = () => {
     // Keep this insight tracked
     setInsightState(insight.id, "acknowledged");
+  };
+
+  const handleGenerateBriefing = async () => {
+    const companyId = useViewStore.getState().companyId;
+    if (!companyId) return;
+    useViewStore.getState().setBriefingOpen(true);
+    useViewStore.getState().setBriefingLoading(true);
+    try {
+      const briefing = await api.generateBriefing(companyId);
+      useViewStore.getState().setBriefing(briefing);
+    } catch {
+      useViewStore.getState().setBriefing(null);
+    } finally {
+      useViewStore.getState().setBriefingLoading(false);
+    }
   };
 
   // Dismissed insights are hidden entirely
@@ -138,17 +154,32 @@ export function InsightCard({
 
           {/* Action buttons */}
           <div className="flex flex-wrap gap-2">
-            <button
-              onClick={handleMonitor}
-              className="rounded-lg px-3 py-1.5 text-xs font-medium transition-colors hover:opacity-80"
-              style={{
-                background: "hsl(var(--surface-elevated))",
-                color: "hsl(var(--text-secondary))",
-                border: "1px solid hsl(var(--text-muted) / 0.15)",
-              }}
-            >
-              Monitor
-            </button>
+            {insight.actions?.includes("monitor") && (
+              <button
+                onClick={handleMonitor}
+                className="rounded-lg px-3 py-1.5 text-xs font-medium transition-colors hover:opacity-80"
+                style={{
+                  background: "hsl(var(--surface-elevated))",
+                  color: "hsl(var(--text-secondary))",
+                  border: "1px solid hsl(var(--text-muted) / 0.15)",
+                }}
+              >
+                Monitor
+              </button>
+            )}
+            {(insight.actions?.includes("export_brief") || insight.actions?.includes("generate_brief")) && (
+              <button
+                onClick={handleGenerateBriefing}
+                className="rounded-lg px-3 py-1.5 text-xs font-medium transition-colors hover:opacity-80"
+                style={{
+                  background: "hsl(var(--accent-primary) / 0.15)",
+                  color: "hsl(var(--accent-primary))",
+                  border: "1px solid hsl(var(--accent-primary) / 0.3)",
+                }}
+              >
+                Generate Briefing
+              </button>
+            )}
             <button
               onClick={handleDismiss}
               className="rounded-lg px-3 py-1.5 text-xs font-medium transition-colors hover:opacity-80"

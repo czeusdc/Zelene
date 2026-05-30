@@ -29,3 +29,5 @@ class AgentState(TypedDict):
     goals: list[str]
     llm_simulation: bool     # True = force simulated LLM (demo mode)
     data_simulation: bool    # True = force simulated Bright Data (demo mode)
+    memory_stored: bool      # True = intelligence persisted to Cognee memory
+    briefing: dict | None    # Strategic briefing generated from all intelligence

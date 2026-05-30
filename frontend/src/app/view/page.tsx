@@ -20,6 +20,7 @@ import { SignalFeed } from "@/components/panels/signal-feed";
 import { IntelligenceMap } from "@/components/panels/intelligence-map";
 import { ZeleneChat } from "@/components/panels/zelene-chat";
 import { SettingsDrawer } from "@/components/settings/settings-drawer";
+import { BriefingPanel } from "@/components/panels/briefing-panel";
 import { useViewStore } from "@/stores/view-store";
 import { useIntelligenceStream } from "@/hooks/useIntelligenceStream";
 import { api } from "@/lib/api";
@@ -187,6 +188,7 @@ function ViewContent() {
       </motion.div>
 
       <SettingsDrawer open={settingsOpen} onClose={() => setSettingsOpen(false)} />
+      <BriefingPanel />
     </div>
   );
 }

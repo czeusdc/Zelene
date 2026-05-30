@@ -49,3 +49,24 @@ export interface Insight {
 }
 
 export interface ChatMessage { id: string; role: "zelene" | "user"; content: string; related_insight?: string; created_at: string; }
+
+export interface BriefingSection { heading: string; content: string; }
+
+export interface Briefing {
+  title: string;
+  generated_at: string;
+  sections: BriefingSection[];
+  signal_count: number;
+  entity_count: number;
+  relationship_count: number;
+  insight_count: number;
+}
+
+export interface MemoryStatus {
+  stored: boolean;
+  type: "cognee" | "session";
+  entity_count: number;
+  relationship_count: number;
+  signal_count: number;
+  company: string;
+}

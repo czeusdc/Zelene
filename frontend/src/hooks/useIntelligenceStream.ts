@@ -11,7 +11,7 @@
 import { useEffect } from "react";
 import { useViewStore } from "@/stores/view-store";
 import { api } from "@/lib/api";
-import { Signal, RelationshipEdge, Insight, Entity, Source } from "@/lib/types";
+import { Signal, RelationshipEdge, Insight, Entity, Source, MemoryStatus } from "@/lib/types";
 
 /** Module-level timer to debounce returning focus to balanced. */
 let focusTimeout: ReturnType<typeof setTimeout> | null = null;
@@ -96,7 +96,14 @@ export function useIntelligenceStream() {
         setPhase("synthesizing");
         setDiscoveryPhase("connecting");
         setIsThinking(true);  // synthesis is the 120s LLM call — show thinking state
+      } else if (data.node === "memory") {
+        setDiscoveryPhase("understanding");
       }
+    });
+
+    source.addEventListener("memory", (e) => {
+      const data = JSON.parse(e.data) as MemoryStatus;
+      useViewStore.getState().setMemoryStatus(data);
     });
 
     source.addEventListener("complete", () => {
@@ -107,10 +114,14 @@ export function useIntelligenceStream() {
       setSilence(true);
       setTimeout(() => {
         setSilence(false);
+        const memStatus = useViewStore.getState().memoryStatus;
+        const memNote = memStatus?.type === "cognee"
+          ? " I've stored everything in my knowledge graph so I'll remember it."
+          : "";
         addMessage({
           id: crypto.randomUUID(),
           role: "zelene",
-          content: "Synthesis complete. Your intelligence environment is now active.",
+          content: `Synthesis complete. Your intelligence environment is now active.${memNote}`,
           created_at: new Date().toISOString(),
         });
       }, 2000);

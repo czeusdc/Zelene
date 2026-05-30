@@ -38,6 +38,9 @@ app.include_router(intelligence_router)
 from src.api.conversation import router as conversation_router
 app.include_router(conversation_router)
 
+from src.api.briefing import router as briefing_router
+app.include_router(briefing_router)
+
 @app.get("/api/health")
 async def health():
     """Health-check endpoint for monitoring and load-balancer probes."""

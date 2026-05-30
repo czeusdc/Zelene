@@ -1,1 +1,1 @@
-﻿{"name":"zelene","private":true,"scripts":{"dev":"pnpm --parallel -r run dev"}}
+{"name":"zelene","private":true,"scripts":{"dev":"pnpm --parallel -r run dev"}}

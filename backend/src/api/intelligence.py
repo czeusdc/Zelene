@@ -56,6 +56,7 @@ async def deploy(req: DeployRequest, db: AsyncSession = Depends(get_db)):
         "insights": [], "current_stage": "deploy", "signals_found": 0, "relationships_mapped": 0,
         "web_sources": [], "goals": company.business_goals or [],
         "llm_simulation": req.llm_simulation, "data_simulation": req.data_simulation,
+        "memory_stored": False, "briefing": None,
     }
 
     async def _run_deployment():
