@@ -8,12 +8,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libpq-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Python dependencies
-COPY pyproject.toml .
-RUN pip install --no-cache-dir ".[dev]"
-
-# Copy application code
+# Copy everything first (pyproject.toml + source code)
 COPY . .
+
+# Install the package so `from src.xxx` imports work
+RUN pip install --no-cache-dir ".[dev]"
 
 # Cloud Run sets PORT env variable (default 8080)
 ENV PORT=8080
