@@ -12,7 +12,7 @@ MOCK_SERP = {
         {"title": "CompetitorX vs YourCo Comparison", "url": "https://g2.com/compare", "snippet": "Side-by-side comparison of features..."},
     ],
     "competitor reviews": [
-        {"title": "CompetitorX Reviews 2026 — G2", "url": "https://g2.com/products/competitorx/reviews", "snippet": "Recent reviews show decline in satisfaction..."},
+        {"title": "CompetitorX Reviews 2026 on G2", "url": "https://g2.com/products/competitorx/reviews", "snippet": "Recent reviews show decline in satisfaction..."},
     ],
     "hiring": [
         {"title": "CompetitorX Careers", "url": "https://competitorx.com/careers", "snippet": "32 open positions in APAC..."},

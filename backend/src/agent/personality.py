@@ -1,8 +1,10 @@
 """Module: Product personality calibration layer for Zelene.
 
-Middleware between raw Gemini LLM output and what reaches the user.
+Middleware between raw LLM output and what reaches the user.
 Enforces Zelene's voice through confidence capping, tone filtering,
-and length constraints — personality in code, not just prompting.
+length constraints, and AI-punctuation stripping — personality in code,
+not just prompting. Zelene must never read as machine-generated:
+em dashes, bullet hyphens, and markdown formatting are stripped.
 """
 
 import re
@@ -32,11 +34,34 @@ _TONE_REPLACEMENTS: list[tuple[str, str]] = [
     (r"Pattern identified", "Something is emerging"),
     (r"Data indicates", "Signals suggest"),
     (r"System detected", "I noticed"),
+    # Fabricated familiarity — Zelene never claims prior knowledge
+    (r"I've come across your name", ""),
+    (r"I've heard of you", ""),
+    (r"I'm familiar with your (?:company|work|business)", ""),
+    (r"I remember (?:reading about|seeing|hearing about) your", ""),
+    # Fabricated speculation — Zelene doesn't guess during onboarding
+    (r"I imagine[,]?\s[^.?!]*[.?!]\s*", ""),
+    (r"I would guess[,]?\s[^.?!]*[.?!]\s*", ""),
+    # Corporate filler — these are not genuine conversation
+    (r"Thank you for sharing that[.!]?", ""),
+    (r"I appreciate you (?:telling|sharing)[^.?!]*[.?!]?\s*", ""),
+    (r"Thank you for (?:telling|letting)[^.?!]*[.?!]?\s*", ""),
+    # Pre-announcing — Zelene doesn't narrate her next question
+    (r"Before (?:we|I) (?:explore|go|move|dive)[^.]*, (?:I'd like to|let me|I'm curious)", "I'm curious"),
+    # Colon-as-connector — AI-typical, humans use periods or "and"
+    (r"([a-z]):\s+([a-z])", r"\1. \2"),
+    (r"I understand if you'd prefer to keep it in reserve[.]?\s*", ""),
+    (r"It makes me curious about the other part of that thought,?\s*but\s*", ""),
 ]
 
-_COMPILED_TONE_PATTERNS: list[tuple[re.Pattern, str]] = [
-    (re.compile(pattern, re.IGNORECASE), replacement)
-    for pattern, replacement in _TONE_REPLACEMENTS
+# AI-typical punctuation that no human naturally uses in conversation.
+# Stripped to prevent Zelene from sounding machine-generated.
+_AI_PUNCTUATION_PATTERNS: list[tuple[re.Pattern, str]] = [
+    (re.compile(r"\s*—\s*"), ", "),               # em dash → comma
+    (re.compile(r"^\s*[-*]\s+", re.MULTILINE), ""), # bullet hyphens/asterisks at line start
+    (re.compile(r"\*\*(.+?)\*\*"), r"\1"),          # **bold** → plain
+    (re.compile(r"\*(.+?)\*"), r"\1"),              # *italic* → plain
+    (re.compile(r"`(.+?)`"), r"\1"),                # `code` → plain
 ]
 
 _MULTI_NEWLINE_RE = re.compile(r"\n{3,}")
@@ -75,12 +100,17 @@ def filter_confidence(insights: list[dict]) -> list[dict]:
 
 
 def filter_tone(text: str) -> str:
-    """Replace overconfident and consultant-speak with Zelene's restrained voice.
+    """Replace overconfident consultant-speak and strip AI-typical punctuation.
 
-    Applies case-insensitive pattern replacements, strips whitespace,
-    and collapses excessive newlines.
+    Applies case-insensitive tone pattern replacements, removes em dashes,
+    bullet hyphens, markdown formatting, strips whitespace, and collapses
+    excessive newlines. Ensures Zelene reads as a human strategic analyst,
+    not machine-generated text.
     """
-    for pattern, replacement in _COMPILED_TONE_PATTERNS:
+    for pattern, replacement in _TONE_REPLACEMENTS:
+        text = re.sub(pattern, replacement, text, flags=re.IGNORECASE)
+
+    for pattern, replacement in _AI_PUNCTUATION_PATTERNS:
         text = pattern.sub(replacement, text)
 
     text = text.strip()

@@ -7,35 +7,35 @@
  */
 
 "use client";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback } from "react";
 
 /** localStorage key shared with layout.tsx (FOUC script) and page.tsx (toggle). */
 const STORAGE_KEY = "theme";
 
 type Theme = "dark" | "light";
 
+function readInitialTheme(): Theme {
+  if (typeof window === "undefined") return "dark";
+  const legacy = localStorage.getItem("zelene-theme") as Theme | null;
+  const stored = localStorage.getItem(STORAGE_KEY) as Theme | null;
+  const resolved = stored || legacy;
+  if (resolved === "dark" || resolved === "light") {
+    document.documentElement.classList.toggle("light", resolved === "light");
+    localStorage.setItem(STORAGE_KEY, resolved);
+    if (legacy) localStorage.removeItem("zelene-theme");
+    return resolved;
+  }
+  return "dark";
+}
+
 /**
  * useTheme — reads/writes theme preference from localStorage using the same
  * key ("theme") as the landing page. Handles migration from a legacy key
- * ("zelene-theme") for existing users.
+ * ("zelene-theme") for existing users. Initial state is read synchronously
+ * to avoid setState-in-effect.
  */
 export function useTheme() {
-  const [theme, setThemeState] = useState<Theme>("dark");
-
-  useEffect(() => {
-    // Migrate legacy "zelene-theme" key if present, then always use "theme"
-    const legacy = localStorage.getItem("zelene-theme") as Theme | null;
-    const stored = localStorage.getItem(STORAGE_KEY) as Theme | null;
-    const resolved = stored || legacy;
-
-    if (resolved && (resolved === "dark" || resolved === "light")) {
-      setThemeState(resolved);
-      document.documentElement.classList.toggle("light", resolved === "light");
-      // Persist resolved value under canonical key and clean up legacy
-      localStorage.setItem(STORAGE_KEY, resolved);
-      if (legacy) localStorage.removeItem("zelene-theme");
-    }
-  }, []);
+  const [theme, setThemeState] = useState<Theme>(readInitialTheme);
 
   const setTheme = useCallback((t: Theme) => {
     setThemeState(t);

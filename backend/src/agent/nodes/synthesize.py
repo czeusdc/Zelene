@@ -91,9 +91,17 @@ async def synthesize_node(state: AgentState) -> dict:
                 schema_description="JSON array of 2 insight objects with id, type, title, body, confidence, actions, reasoning",
             )
 
-        # LLM call runs concurrently with the 1.5s pacing delay
+        # LLM call runs concurrently; broadcast early observation during the wait
         llm_task = asyncio.create_task(fetch_llm_insights())
-        await asyncio.sleep(1.5 * sse_manager.speed)
+        await asyncio.sleep(5.0 * sse_manager.speed)
+
+        # Early observation while the LLM reasons — prevents the 28s dead zone
+        signal_count = len(state.get("signals", []))
+        await sse_manager.broadcast(state["deployment_id"], "signal", {
+            "type": "status",
+            "title": f"I'm forming observations from {signal_count} signals.",
+            "content": "Looking for patterns and connections that matter to your business.",
+        })
 
         try:
             # 120s timeout accommodates DeepSeek V4 Pro reasoning + 5-10KB payload
@@ -111,6 +119,7 @@ async def synthesize_node(state: AgentState) -> dict:
 
     for insight in insights:
         await sse_manager.broadcast(state["deployment_id"], "insight", insight)
+        await asyncio.sleep(4.0 * sse_manager.speed)  # thoughtful pause between insights
 
     await sse_manager.broadcast(state["deployment_id"], "node_complete",
                                 {"node": "synthesize", "insights_generated": len(insights)})

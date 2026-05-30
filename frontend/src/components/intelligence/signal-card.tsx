@@ -54,7 +54,21 @@ export function SignalCard({ signal, sources }: { signal: Signal; sources?: Sour
         <ConfidenceBadge value={signal.confidence} />
       </div>
       <p className="text-xs leading-relaxed mb-2" style={{ color: "hsl(var(--text-secondary))" }}>{signal.content}</p>
-      <div className="flex items-center gap-2 text-xs" style={{ color: "hsl(var(--text-muted))" }}>
+
+      {/* Metadata row: confidence, source count, evidence count, relative time */}
+      <div className="flex items-center gap-1.5 text-xs flex-wrap" style={{ color: "hsl(var(--text-muted))" }}>
+        <span className="font-medium" style={{ color: "hsl(var(--text-primary))" }}>
+          {Math.round(signal.confidence * 100)}%
+        </span>
+        <span style={{ opacity: 0.5 }}>confidence</span>
+        <span style={{ opacity: 0.3 }}>&middot;</span>
+        <span>{evidenceCount} {evidenceCount === 1 ? "source" : "sources"}</span>
+        <span style={{ opacity: 0.3 }}>&middot;</span>
+        {signal.extracted_at && <RelativeTime dateString={signal.extracted_at} />}
+      </div>
+
+      {/* Source attribution + evidence expander */}
+      <div className="flex items-center gap-2 text-xs mt-1.5" style={{ color: "hsl(var(--text-muted))" }}>
         <span>{signal.source}</span>
         {evidenceCount > 0 && (
           <>
@@ -68,10 +82,14 @@ export function SignalCard({ signal, sources }: { signal: Signal; sources?: Sour
             </button>
           </>
         )}
-        <span>&middot;</span>
-        {signal.extracted_at && <RelativeTime dateString={signal.extracted_at} />}
-        {signal.confidence < 0.75 && <span style={{ color: "hsl(var(--signal-warning))" }}>&mdash; Early signal, I&rsquo;ll need more data to be sure</span>}
       </div>
+
+      {/* Low confidence indicator */}
+      {signal.confidence < 0.75 && (
+        <p className="text-xs mt-1" style={{ color: "hsl(var(--signal-warning))" }}>
+          Early signal, I&apos;ll need more data to be sure
+        </p>
+      )}
       <AnimatePresence>
         {expanded && evidenceCount > 0 && (
           <motion.div

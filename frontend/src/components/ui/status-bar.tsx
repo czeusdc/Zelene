@@ -33,13 +33,13 @@ export function StatusBar() {
         borderTop: "1px solid hsl(var(--text-muted) / 0.06)",
       }}
     >
-      <span>signals: {signals.length}</span>
+      <span>{signals.length} signals observed</span>
       <span className="mx-2">&middot;</span>
-      <span>entities: {entities.length}</span>
+      <span>{entities.length} entities tracked</span>
       <span className="mx-2">&middot;</span>
-      <span>relationships: {relationships.length}</span>
+      <span>{relationships.length} relationships mapped</span>
       <span className="mx-2">&middot;</span>
-      <span>confidence: {confidence}%</span>
+      <span>{confidence}% confidence across observations</span>
     </div>
   );
 }

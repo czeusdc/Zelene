@@ -1,48 +1,80 @@
 /**
- * @fileoverview Zelene chat panel — provides a conversational interface
- * for asking strategic questions. Messages are routed through the backend
- * and displayed as ZeleneMessage cards.
+ * @fileoverview Zelene chat panel — single evolving presence interface.
+ * Shows ONE active Zelene thought at a time via InsightPresence, with
+ * previous insights collapsed below. User chat messages appear beneath
+ * the insight area. This replaces the old stacked-cards layout.
  * Part of the Zelene strategic intelligence platform.
  */
 
 "use client";
-import { useState, FormEvent } from "react";
+import { useState, FormEvent, useEffect } from "react";
 import { useViewStore } from "@/stores/view-store";
-import { ZeleneMessage } from "@/components/conversation/zelene-message";
 import { TypingIndicator } from "@/components/conversation/typing-indicator";
+import { InsightPresence } from "@/components/intelligence/insight-card";
 import { api } from "@/lib/api";
 import { motion } from "framer-motion";
 
 /**
- * ZeleneChat — renders chat history from the store, an input form with
- * a submit handler that calls the askZelene API, and a typing indicator
- * while waiting for a response.
+ * ZeleneChat — renders the single evolving presence right panel.
+ * InsightPresence handles Zelene's strategic thoughts (active + collapsed).
+ * Below it, user messages and the input form provide conversational follow-up.
  */
 export function ZeleneChat() {
   const messages = useViewStore((s) => s.messages);
   const isThinking = useViewStore((s) => s.isThinking);
   const addMessage = useViewStore((s) => s.addMessage);
   const setIsThinking = useViewStore((s) => s.setIsThinking);
+  const setActiveInsight = useViewStore((s) => s.setActiveInsight);
   const companyId = useViewStore((s) => s.companyId);
+  const insights = useViewStore((s) => s.insights);
   const [input, setInput] = useState("");
+
+  // Auto-select latest insight as active when new insight arrives
+  useEffect(() => {
+    if (insights.length > 0) {
+      const latest = insights[insights.length - 1];
+      setActiveInsight(latest.id!);
+    }
+  }, [insights.length, insights, setActiveInsight]);
+
+  // User chat messages only
+  const userMessages = messages.filter((m) => m.role === "user");
 
   const handleAsk = async (e: FormEvent) => {
     e.preventDefault();
     const text = input.trim();
     if (!text || !companyId) return;
     setInput("");
-    addMessage({ id: crypto.randomUUID(), role: "user", content: text, created_at: new Date().toISOString() });
+    addMessage({
+      id: crypto.randomUUID(),
+      role: "user",
+      content: text,
+      created_at: new Date().toISOString(),
+    });
     setIsThinking(true);
     try {
       const res = await api.askZelene(companyId, text);
-      addMessage({ id: crypto.randomUUID(), role: "zelene", content: res.reply, created_at: new Date().toISOString() });
+      addMessage({
+        id: crypto.randomUUID(),
+        role: "zelene",
+        content: res.reply,
+        created_at: new Date().toISOString(),
+      });
     } catch {
-      addMessage({ id: crypto.randomUUID(), role: "zelene", content: "I'm having trouble accessing that information right now.", created_at: new Date().toISOString() });
-    } finally { setIsThinking(false); }
+      addMessage({
+        id: crypto.randomUUID(),
+        role: "zelene",
+        content: "I'm having trouble accessing that information right now.",
+        created_at: new Date().toISOString(),
+      });
+    } finally {
+      setIsThinking(false);
+    }
   };
 
   return (
     <div className="flex flex-col h-full overflow-hidden">
+      {/* Header */}
       <div className="px-4 pt-4 pb-2">
         <span
           className="text-xs uppercase"
@@ -55,33 +87,70 @@ export function ZeleneChat() {
           Zelene
         </span>
       </div>
-      <div className="flex-1 overflow-y-auto p-4">
-        {messages.length === 0 && (
-          <div className="flex items-center justify-center h-full">
-            <p className="text-sm text-center" style={{ color: "hsl(var(--text-muted))" }}>Zelene will surface strategic insights here as intelligence is gathered.</p>
+
+      {/* Scrollable content area */}
+      <div className="flex-1 overflow-y-auto px-4">
+        {/* Zelene's evolving presence — one active thought at a time */}
+        <InsightPresence insights={insights} />
+
+        {/* User chat messages — below Zelene's thoughts */}
+        {userMessages.length > 0 && (
+          <div
+            className="pt-3 mt-3"
+            style={{ borderTop: "1px solid hsl(var(--text-muted) / 0.06)" }}
+          >
+            {userMessages.map((msg) => (
+              <div key={msg.id} className="flex justify-end mb-3">
+                <div
+                  className="rounded-xl px-4 py-2.5 max-w-[80%] text-sm"
+                  style={{
+                    background: "hsl(var(--accent-primary) / 0.12)",
+                    color: "hsl(var(--text-primary))",
+                  }}
+                >
+                  {msg.content}
+                </div>
+              </div>
+            ))}
           </div>
         )}
-        {messages.map((msg) =>
-          msg.role === "user" ? (
-            <div key={msg.id} className="flex justify-end mb-4">
-              <div className="rounded-xl px-4 py-2.5 max-w-[80%] text-sm" style={{ background: "hsl(var(--accent-primary) / 0.12)", color: "hsl(var(--text-primary))" }}>{msg.content}</div>
-            </div>
-          ) : (
-            // Coerce ChatMessage into an Insight shape for ZeleneMessage.
-            // The title is derived from the first paragraph of the reply;
-            // confidence defaults to 0.8 since chat responses aren't scored.
-            <ZeleneMessage key={msg.id} insight={{ id: msg.id, type: "observation", title: msg.content.split("\n\n")[0] || msg.content.slice(0, 100), body: msg.content, confidence: 0.8, evidence_signals: [], actions: ["monitor", "generate_brief", "dismiss"] }} onAction={(a) => console.log("Action:", a)} />
-          )
-        )}
+
         {isThinking && <TypingIndicator />}
       </div>
-      <form onSubmit={handleAsk} className="p-3 border-t" style={{ borderColor: "hsl(var(--text-muted) / 0.1)" }}>
+
+      {/* Input form */}
+      <form
+        onSubmit={handleAsk}
+        className="p-3 border-t"
+        style={{ borderColor: "hsl(var(--text-muted) / 0.1)" }}
+      >
         <div className="flex gap-2">
-          <input value={input} onChange={(e) => setInput(e.target.value)} placeholder="Ask Zelene about a competitor, signal, or risk..."
+          <input
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder="Ask Zelene about a competitor, signal, or risk..."
             autoComplete="off"
-            className="flex-1 rounded-lg px-3 py-2 text-xs outline-none" style={{ background: "hsl(var(--surface-overlay))", color: "hsl(var(--text-primary))", border: "1px solid hsl(var(--text-muted) / 0.15)" }} />
-          <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} type="submit" disabled={!input.trim() || isThinking}
-            className="rounded-lg px-4 py-2 text-xs font-medium" style={{ background: "hsl(var(--accent-primary))", color: "white", opacity: !input.trim() ? 0.4 : 1 }}>Ask</motion.button>
+            className="flex-1 rounded-lg px-3 py-2 text-xs outline-none"
+            style={{
+              background: "hsl(var(--surface-overlay))",
+              color: "hsl(var(--text-primary))",
+              border: "1px solid hsl(var(--text-muted) / 0.15)",
+            }}
+          />
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            type="submit"
+            disabled={!input.trim() || isThinking}
+            className="rounded-lg px-4 py-2 text-xs font-medium"
+            style={{
+              background: "hsl(var(--accent-primary))",
+              color: "white",
+              opacity: !input.trim() ? 0.4 : 1,
+            }}
+          >
+            Ask
+          </motion.button>
         </div>
       </form>
     </div>

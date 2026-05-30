@@ -19,6 +19,7 @@ export function OnboardingLayout({ children, stage, isThinking }: {
   const [isDark, setIsDark] = useState(true);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsDark(document.documentElement.classList.contains("dark"));
   }, []);
 

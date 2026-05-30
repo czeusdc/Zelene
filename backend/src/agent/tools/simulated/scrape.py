@@ -8,7 +8,7 @@ from src.agent.tools.base import ScraperTool
 
 MOCK_PAGES = {
     "pricing": "Enterprise Plan: $499/month. Growth Plan: $199/month. Starter: $49/month. CompetitorX recently reduced Enterprise tier by 12%.",
-    "reviews": "Customer reviews show mixed sentiment. Overall rating: 3.8/5 (down from 4.2). 47 new negative reviews in 24h — primarily about support and pricing.",
+    "reviews": "Customer reviews show mixed sentiment. Overall rating: 3.8/5 (down from 4.2). 47 new negative reviews in 24 hours, primarily about support and pricing.",
     "careers": "Openings: 32 engineering (APAC), 8 sales (NA), 5 product. Notable: Senior ML Engineer, Head of APAC Expansion. Hiring velocity +40% QoQ.",
 }
 

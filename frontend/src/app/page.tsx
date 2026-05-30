@@ -28,14 +28,16 @@ const particles = [
 
 export default function Home() {
   const router = useRouter();
-  /* Whether the current theme is dark (derived from <html> class on mount) */
+  /* Whether the current theme is dark (default dark, synced from DOM on mount). */
   const [isDark, setIsDark] = useState(true);
   /* True while the "Begin" → onboarding navigation is in progress */
   const [isNavigating, setIsNavigating] = useState(false);
   /* Tracks hover on the CTA button to subtly adjust border opacity */
   const [isHovering, setIsHovering] = useState(false);
 
+  // Sync theme state from the DOM class set by the FOUC script in layout.tsx.
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsDark(document.documentElement.classList.contains("dark"));
   }, []);
 

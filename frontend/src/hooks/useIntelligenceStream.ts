@@ -37,6 +37,7 @@ export function useIntelligenceStream() {
   const setPhase = useViewStore((s) => s.setPhase);
   const setIsThinking = useViewStore((s) => s.setIsThinking);
   const setSilence = useViewStore((s) => s.setSilence);
+  const setDiscoveryPhase = useViewStore((s) => s.setDiscoveryPhase);
 
   useEffect(() => {
     if (!deploymentId) return;
@@ -69,6 +70,7 @@ export function useIntelligenceStream() {
 
     source.addEventListener("insight", (e) => {
       const data = JSON.parse(e.data) as Insight;
+      useViewStore.getState().addInsight(data);
       addMessage({ id: data.id || crypto.randomUUID(), role: "zelene",
         content: `${data.title}\n\n${data.body}`, created_at: new Date().toISOString(), related_insight: data.id });
       setTemporaryFocus("chat", 4000);
@@ -79,16 +81,20 @@ export function useIntelligenceStream() {
       // Map each pipeline node to a user-facing phase label
       if (data.node === "deploy") {
         setPhase("gathering");
+        setDiscoveryPhase("discovering");
         // Capture simulation flags from the deploy node for future UI (force-sim toggle)
         if (data.llm_simulation || data.data_simulation) {
           useViewStore.setState({ llmSimulation: data.llm_simulation, dataSimulation: data.data_simulation });
         }
       } else if (data.node === "extract") {
         setPhase("gathering");
+        setDiscoveryPhase("reviewing");
       } else if (data.node === "classify" || data.node === "verify") {
         setPhase("analyzing");
+        setDiscoveryPhase("validating");
       } else if (data.node === "synthesize") {
         setPhase("synthesizing");
+        setDiscoveryPhase("connecting");
         setIsThinking(true);  // synthesis is the 120s LLM call — show thinking state
       }
     });
@@ -97,6 +103,7 @@ export function useIntelligenceStream() {
       setPhase("active");
       setIsThinking(false);
       setConnectionStatus("connected");
+      setDiscoveryPhase("understanding");
       setSilence(true);
       setTimeout(() => {
         setSilence(false);
@@ -119,5 +126,5 @@ export function useIntelligenceStream() {
         focusTimeout = null;
       }
     };
-  }, [deploymentId]);
+  }, [deploymentId, addSignal, addSource, addMessage, setConnectionStatus, setPhase, setIsThinking, setSilence, setDiscoveryPhase]);
 }

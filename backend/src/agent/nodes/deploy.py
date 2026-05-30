@@ -25,6 +25,14 @@ async def deploy_node(state: AgentState) -> dict:
         "data_simulation": state.get("data_simulation", False),
     })
 
+    # Broadcast status immediately so the user sees activity within seconds,
+    # NOT after the 30s+ search wait — prevents the dead-zone perception.
+    await sse_manager.broadcast(state["deployment_id"], "signal", {
+        "type": "status",
+        "title": "I'm reviewing sources across your competitive landscape.",
+        "content": f"I'm looking into intelligence related to {state['company_name']} and {len(state['competitors'])} competitors.",
+    })
+
     company_context = {
         "company_name": state.get("company_name", ""),
         "industry": state.get("industry", ""),
@@ -63,11 +71,6 @@ async def deploy_node(state: AgentState) -> dict:
     await asyncio.sleep(2 * sse_manager.speed)
     web_sources = await search_task
 
-    await sse_manager.broadcast(state["deployment_id"], "signal", {
-        "type": "status", "title": "Scanning public web for signals...",
-        "content": f"Searching for intelligence related to {state['company_name']} and {len(state['competitors'])} competitors.",
-    })
-
     if web_sources:
         for source in web_sources[:5]:
             source["id"] = f"src_{uuid4().hex[:8]}"
@@ -78,21 +81,21 @@ async def deploy_node(state: AgentState) -> dict:
                 "snippet": source.get("snippet", ""),
                 "query": source.get("query", "competitive intelligence"),
             })
-            await asyncio.sleep(0.3 * sse_manager.speed)
+            await asyncio.sleep(1.0 * sse_manager.speed)  # staggered source reveal
 
         await sse_manager.broadcast(state["deployment_id"], "signal", {
             "type": "status",
-            "title": f"I've identified {len(web_sources)} relevant sources. Reviewing the most meaningful signals now.",
-            "content": "Beginning signal extraction.",
+            "title": f"I've identified {len(web_sources)} relevant sources. Let me focus on what matters most.",
+            "content": "I'm beginning to see the shape of the landscape.",
         })
     else:
         await sse_manager.broadcast(state["deployment_id"], "signal", {
             "type": "status",
-            "title": "I've identified 47 relevant sources. Reviewing the most meaningful signals now.",
-            "content": "Beginning signal extraction.",
+            "title": "I'm still gathering sources. This may take a moment.",
+            "content": "Checking multiple information channels for relevant data.",
         })
 
-    sources_count = len(web_sources) if web_sources else 47
+    sources_count = len(web_sources) if web_sources else 0
     await sse_manager.broadcast(state["deployment_id"], "node_complete", {
         "node": "deploy", "sources_found": sources_count,
     })

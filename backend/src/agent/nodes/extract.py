@@ -108,7 +108,7 @@ async def extract_node(state: AgentState) -> dict:
 
     signals = []
     for i, template in enumerate(SIGNALS):
-        await asyncio.sleep(1.5 * sse_manager.speed)
+        await asyncio.sleep(2.0 * sse_manager.speed)  # staggered emergence cadence
         signal = _expand(template, comp0, comp1, industry, web_sources)
         signal["id"] = f"sig_{state['deployment_id'][:8]}_{i}"
         signals.append(signal)

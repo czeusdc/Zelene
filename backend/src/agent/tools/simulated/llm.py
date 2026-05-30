@@ -11,7 +11,7 @@ from typing import AsyncIterator
 FULL_INTRODUCTION = (
     "Welcome. I'm Zelene, your strategic intelligence presence.\n\n"
     "Think of me as an analyst who continuously observes your market "
-    "on your behalf — competitors, risks, opportunities, sentiment shifts.\n\n"
+    "on your behalf. Competitors, risks, opportunities, sentiment shifts.\n\n"
     "To begin, I'd like to understand your business. Tell me about your "
     "company. What do you do, and in what industry?"
 )
@@ -104,7 +104,7 @@ class SimulatedLLMProvider(LLMProvider):
 
             reply = (
                 f"Noted. I'm now tracking {', '.join(session['competitors'])}. "
-                "One more thing — what matters most to your business right now? "
+                "One more thing. What matters most to your business right now? "
                 "What are your key goals for the coming quarters?"
             )
             return reply, session, "goals"

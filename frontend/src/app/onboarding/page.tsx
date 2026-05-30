@@ -20,7 +20,7 @@ let msgCounter = 0;
 /** Zelene's full greeting — shown immediately without an API call. */
 const GREETING =
   "Welcome. I'm Zelene, your strategic intelligence presence.\n\n" +
-  "Think of me as an analyst who continuously observes your market on your behalf — competitors, risks, opportunities, sentiment shifts.\n\n" +
+  "Think of me as an analyst who continuously observes your market on your behalf. Competitors, risks, opportunities, sentiment shifts.\n\n" +
   "To begin, I'd like to understand your business. Tell me about your company. What do you do, and in what industry?";
 
 export default function OnboardingPage() {

@@ -17,7 +17,7 @@ export const metadata: Metadata = { title: "Zelene", description: "Strategic Int
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${inter.variable} ${jetbrainsMono.variable}`} suppressHydrationWarning>
-      <body className="mesh-bg">
+      <head>
         <script
           dangerouslySetInnerHTML={{
             __html: `
@@ -32,6 +32,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             `,
           }}
         />
+      </head>
+      <body className="mesh-bg">
         {children}
       </body>
     </html>

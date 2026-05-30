@@ -39,7 +39,7 @@ export function ZeleneMessage({ insight, onAction }: { insight: Insight; onActio
         <p className="text-xs leading-relaxed mb-3" style={{ color: "hsl(var(--text-secondary))" }}>
           <TypingText text={insight.body} messageId={insight.id} speed={25} />
         </p>
-        {insight.reasoning && <p className="text-xs italic mb-3" style={{ color: "hsl(var(--text-muted))" }}>— {insight.reasoning}</p>}
+        {insight.reasoning && <p className="text-xs italic mb-3" style={{ color: "hsl(var(--text-muted))" }}>{insight.reasoning}</p>}
         <div className="flex flex-wrap gap-2">
           {(insight.actions || ["monitor", "dismiss"]).slice(0, 4).map((action) => (
             <button key={action} onClick={() => onAction(action)}

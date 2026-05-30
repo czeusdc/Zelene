@@ -57,11 +57,38 @@ onboarding_sessions: dict[str, dict] = {}
 def _get_stage_instructions(stage: str) -> str:
     """Return guidance text for the current onboarding stage."""
     instructions = {
-        "introduction": "Greet the user warmly and ask them to describe their company and what they do. Extract the company name from their response.",
-        "company": "Ask what makes their company different from others in the field. Acknowledge their unique positioning.",
-        "competitors": "Ask who their main competitors are. They can list multiple names.",
-        "goals": "Ask about their key business goals and priorities for the coming quarters.",
-        "confirm": "Summarize what you've understood and ask them to confirm the details are correct.",
+        "introduction": (
+            "Greet the user warmly. They just told you their company name and what "
+            "they do. Acknowledge what they told you — and ONLY what they told you. "
+            "Do not speculate about their scale, reputation, market role, or impact. "
+            "You are meeting them for the first time and have not researched them yet. "
+            "Then ask what makes their company different from competitors. "
+            "Your reply MUST end with a question."
+        ),
+        "company": (
+            "Ask what makes their company different from others in the field. "
+            "If the user has already described their differentiation in this message, "
+            "acknowledge it genuinely as an insight, then ask who their main "
+            "competitors are. Your reply MUST end with a question about competitors."
+        ),
+        "competitors": (
+            "The user just told you who their competitors are. Acknowledge them "
+            "briefly by name. Then ask about their business GOALS and priorities. "
+            "DO NOT ask about differentiation, distinctiveness, or what sets them "
+            "apart — that question was already asked and answered in the previous "
+            "stage. Your only job now: ask what they're trying to achieve."
+        ),
+        "goals": (
+            "Ask about their key business goals and priorities for the coming quarters. "
+            "Keep it open-ended and curious. If their answer is short, probe once more "
+            "with genuine interest. If they've given a full answer, move toward confirmation. "
+            "Your reply should feel like genuine curiosity, not a form field."
+        ),
+        "confirm": (
+            "Summarize what you've understood using warm, natural language. "
+            "For example: 'I believe I have a clear picture now. Take a look at what I've understood.' "
+            "Ask them to confirm the details are correct. Set next_stage to 'complete'."
+        ),
         "complete": "Let them know their intelligence environment is ready.",
     }
     return instructions.get(stage, "Continue the conversation naturally.")
@@ -73,6 +100,7 @@ async def onboard(req: OnboardRequest):
     session_id = req.session_id or str(uuid4())
     session = onboarding_sessions.get(session_id, {
         "company_name": None, "industry": None, "description": None,
+        "differentiation": None,
         "competitors": [], "goals": [], "concerns": [], "market_focus": [],
         "stage": "introduction",
     })
@@ -99,12 +127,11 @@ async def onboard(req: OnboardRequest):
             )
             result = await llm.chat_structured(
                 [AgentMessage(role="user", content=prompt)],
-                schema_description='JSON object with "reply" (string), "context_updates" (object with optional company_name, industry, competitors, goals), "next_stage" (string)',
+                schema_description='JSON object with "reply" (string) and "context_updates" (object with optional company_name, industry, competitors, goals)',
             )
 
             reply = filter_tone(result.get("reply", ""))
             context_updates = result.get("context_updates", {})
-            proposed_stage = result.get("next_stage", stage)
 
             if context_updates.get("company_name"):
                 session["company_name"] = context_updates["company_name"]
@@ -125,11 +152,30 @@ async def onboard(req: OnboardRequest):
 
             if stage == "introduction":
                 session["description"] = req.message
+                # Capture differentiation if the introduction message is substantial
+                # (more than just company name + brief industry mention)
+                if len(req.message.split()) > 8:
+                    session["differentiation"] = req.message
+            elif stage == "company":
+                session["differentiation"] = req.message
 
-            if proposed_stage in VALID_STAGES and proposed_stage == STAGE_TRANSITIONS.get(stage, stage):
-                next_stage = proposed_stage
-            else:
-                next_stage = stage
+            # Deterministic stage progression with compression.
+            # If the user already provided information that would be asked in
+            # upcoming stages, skip those stages. This prevents Zelene from
+            # asking questions the user already answered.
+            next_stage = STAGE_TRANSITIONS.get(stage, stage)
+            while next_stage not in ("confirm", "complete"):
+                info_complete = True
+                if next_stage == "company" and not session.get("differentiation"):
+                    info_complete = False
+                elif next_stage == "competitors" and not session.get("competitors"):
+                    info_complete = False
+                elif next_stage == "goals" and not session.get("goals"):
+                    info_complete = False
+                if info_complete:
+                    next_stage = STAGE_TRANSITIONS.get(next_stage, next_stage)
+                else:
+                    break
 
             session["stage"] = next_stage
 

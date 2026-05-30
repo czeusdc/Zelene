@@ -28,13 +28,15 @@ function ViewContent() {
   const searchParams = useSearchParams();
   const companyId = searchParams.get("company_id");
   const setCompanyId = useViewStore((s) => s.setCompanyId);
+  const deploymentId = useViewStore((s) => s.deploymentId);
   const setDeploymentId = useViewStore((s) => s.setDeploymentId);
+  const connectionStatus = useViewStore((s) => s.connectionStatus);
   const setConnectionStatus = useViewStore((s) => s.setConnectionStatus);
   const focusState = useViewStore((s) => s.focusState);
   const silence = useViewStore((s) => s.silence);
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [deploying, setDeploying] = useState(true);
-  const [revealed, setRevealed] = useState(false);
+  // Derived: deploying until deployment ID arrives; error short-circuits
+  const deploying = connectionStatus !== "error" && !deploymentId;
 
   const focusStyles = (panel: "signal" | "graph" | "chat") => {
     if (focusState === "balanced") return { opacity: 1, filter: "brightness(1)" };
@@ -48,20 +50,17 @@ function ViewContent() {
   useEffect(() => {
     if (!companyId) {
       setConnectionStatus("error");
-      setDeploying(false);
       return;
     }
     setCompanyId(companyId);
     api.deployIntelligence(companyId)
       .then((res) => {
         setDeploymentId(res.deployment_id);
-        setDeploying(false);
-        setTimeout(() => setRevealed(true), 100);
       })
       .catch(() => {
         setConnectionStatus("error");
-        setDeploying(false);
       });
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- Zustand setters are stable
   }, [companyId]);
 
   // Missing company ID is a dead-end — show an error instead of empty panels
@@ -118,7 +117,7 @@ function ViewContent() {
       {/* Header — fades in at T+400ms */}
       <motion.div
         initial={{ opacity: 0 }}
-        animate={revealed ? { opacity: 1 } : { opacity: 0 }}
+        animate={deploymentId ? { opacity: 1 } : { opacity: 0 }}
         transition={{ duration: 0.2, delay: 0.3, ease: "easeOut" }}
       >
         <ViewHeader onSettingsClick={() => setSettingsOpen(true)} />
@@ -129,7 +128,7 @@ function ViewContent() {
         <motion.div
           className="w-[280px] flex flex-col overflow-hidden"
           initial={{ opacity: 0, x: -40 }}
-          animate={revealed ? { x: 0, ...focusStyles("signal") } : { opacity: 0, x: -40 }}
+          animate={deploymentId ? { x: 0, ...focusStyles("signal") } : { opacity: 0, x: -40 }}
           transition={{ duration: 0.4, delay: 0.7, ease: "easeOut" }}
           style={{
             background: "hsl(var(--surface-base))",
@@ -143,7 +142,7 @@ function ViewContent() {
         <motion.div
           className="flex-1 flex flex-col overflow-hidden"
           initial={{ opacity: 0 }}
-          animate={revealed ? focusStyles("graph") : { opacity: 0 }}
+          animate={!!deploymentId ? focusStyles("graph") : { opacity: 0 }}
           transition={{ duration: 0.5, delay: 0.5, ease: "easeOut" }}
           style={{
             background: "hsl(var(--surface-elevated))",
@@ -167,7 +166,7 @@ function ViewContent() {
         <motion.div
           className="w-[320px] flex flex-col overflow-hidden"
           initial={{ opacity: 0, x: 40 }}
-          animate={revealed ? { x: 0, ...focusStyles("chat") } : { opacity: 0, x: 40 }}
+          animate={!!deploymentId ? { x: 0, ...focusStyles("chat") } : { opacity: 0, x: 40 }}
           transition={{ duration: 0.4, delay: 0.8, ease: "easeOut" }}
           style={{
             background: "hsl(var(--surface-overlay))",
@@ -181,7 +180,7 @@ function ViewContent() {
       {/* Status Bar — fades in at T+1400ms */}
       <motion.div
         initial={{ opacity: 0 }}
-        animate={revealed ? { opacity: 1 } : { opacity: 0 }}
+        animate={!!deploymentId ? { opacity: 1 } : { opacity: 0 }}
         transition={{ duration: 0.2, delay: 1.1, ease: "easeOut" }}
       >
         <StatusBar />

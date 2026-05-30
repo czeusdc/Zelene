@@ -15,8 +15,9 @@ async def classify_node(state: AgentState) -> dict:
     await sse_manager.broadcast(state["deployment_id"], "node_start", {"node": "classify"})
     await asyncio.sleep(1 * sse_manager.speed)
     await sse_manager.broadcast(state["deployment_id"], "signal", {
-        "type": "status", "title": "Cross-referencing with historical patterns...",
-        "content": "Comparing extracted signals against known market behavior.",
+        "type": "status",
+        "title": "I'm comparing what I've found against known patterns.",
+        "content": "Checking extracted signals against market behavior I've seen before.",
     })
     await sse_manager.broadcast(state["deployment_id"], "node_complete", {"node": "classify", "signals_classified": state.get("signals_found", 4)})
     return {"current_stage": "verify"}

@@ -51,6 +51,18 @@ export function IntelligenceMap() {
   const [emphasizedNodeIds, setEmphasizedNodeIds] = useState<Set<string>>(new Set());
   const [pulsingNodeIds, setPulsingNodeIds] = useState<Set<string>>(new Set());
 
+  const layoutNodes = useMemo(
+    () =>
+      entities.slice(0, 6).map((e, i) => ({
+        id: e.id,
+        x: positions[i]?.x ?? 350,
+        y: positions[i]?.y ?? 250,
+        name: e.name,
+        type: e.type,
+      })),
+    [entities]
+  );
+
   // Trigger node emphasis and pulse when a new signal references entities
   useEffect(() => {
     if (signals.length === 0) return;
@@ -64,6 +76,7 @@ export function IntelligenceMap() {
     });
 
     if (matchedIds.size > 0) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- signal-driven animation trigger is the intended use
       setEmphasizedNodeIds(matchedIds);
       setPulsingNodeIds(matchedIds);
       const emphasisTimer = setTimeout(() => setEmphasizedNodeIds(new Set()), 1200);
@@ -73,19 +86,7 @@ export function IntelligenceMap() {
         clearTimeout(pulseTimer);
       };
     }
-  }, [signals]);
-
-  const layoutNodes = useMemo(
-    () =>
-      entities.slice(0, 6).map((e, i) => ({
-        id: e.id,
-        x: positions[i]?.x ?? 350,
-        y: positions[i]?.y ?? 250,
-        name: e.name,
-        type: e.type,
-      })),
-    [entities]
-  );
+  }, [signals, layoutNodes]);
 
   const nodeMap = useMemo(
     () => Object.fromEntries(layoutNodes.map((n) => [n.id, n])),
