@@ -195,6 +195,7 @@ async def onboard(req: OnboardRequest):
             "company_name": session.get("company_name"),
             "industry": session.get("industry"),
             "description": session.get("description"),
+            "differentiation": session.get("differentiation"),
             "competitors": session.get("competitors", []),
             "goals": session.get("goals", []),
             "concerns": session.get("concerns", []),

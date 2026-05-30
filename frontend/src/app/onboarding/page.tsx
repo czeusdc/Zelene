@@ -83,18 +83,20 @@ export default function OnboardingPage() {
         addMessage("zelene", r);
       }
 
-      // Stage is derived from data presence, not hard-coded transitions
+      // Stage is derived from data presence, not hard-coded transitions.
+      // Checks differentiation (not just company_name) so the "company" stage
+      // is not skipped when the user provides a name in the introduction.
       const ctx = res.context_so_far;
       const hasCompetitors = ctx.competitors && (ctx.competitors as string[]).length > 0;
       const hasGoals = ctx.goals && (ctx.goals as string[]).length > 0;
-      const hasName = !!ctx.company_name;
+      const hasDifferentiation = !!ctx.differentiation;
 
-      if (hasCompetitors && hasGoals && hasName) {
+      if (hasCompetitors && hasGoals && hasDifferentiation) {
         setStage("confirm");
         setTimeout(() => setShowContext(true), 2500);
       } else if (hasCompetitors) {
         setStage("goals");
-      } else if (hasName) {
+      } else if (hasDifferentiation) {
         setStage("competitors");
       } else {
         setStage("company");
