@@ -164,13 +164,17 @@ async def onboard(req: OnboardRequest):
             # If the user already provided information that would be asked in
             # upcoming stages, skip those stages. This prevents Zelene from
             # asking questions the user already answered.
+            # EXCEPTION: competitors stage is mandatory — never skip it.
+            # The user must be asked even if they haven't named anyone yet.
             next_stage = STAGE_TRANSITIONS.get(stage, stage)
             while next_stage not in ("confirm", "complete"):
                 info_complete = True
                 if next_stage == "company" and not session.get("differentiation"):
                     info_complete = False
-                elif next_stage == "competitors" and not session.get("competitors"):
+                elif next_stage == "competitors":
+                    # Competitors stage is always required — never skip
                     info_complete = False
+                    break
                 elif next_stage == "goals" and not session.get("goals"):
                     info_complete = False
                 if info_complete:

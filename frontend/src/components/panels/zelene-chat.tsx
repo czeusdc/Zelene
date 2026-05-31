@@ -71,7 +71,8 @@ export function ZeleneChat() {
         content: res.reply,
         created_at: new Date().toISOString(),
       });
-    } catch {
+    } catch (err) {
+      console.error("Zelene chat error:", err);
       addMessage({
         id: crypto.randomUUID(),
         role: "zelene",
