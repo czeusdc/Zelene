@@ -1,10 +1,12 @@
 /**
  * @fileoverview Signal feed panel — renders the live stream of intelligence
  * signals in a scrollable list, with a placeholder state while deploying.
+ * Auto-scrolls to the latest signal as they arrive.
  * Part of the Zelene strategic intelligence platform.
  */
 
 "use client";
+import { useRef, useEffect } from "react";
 import { useViewStore } from "@/stores/view-store";
 import { SignalCard } from "@/components/intelligence/signal-card";
 import { SourceCard } from "@/components/intelligence/source-card";
@@ -20,11 +22,23 @@ const statusMessages: Record<string, string> = {
 /**
  * SignalFeed — reads signals from the view store and renders them
  * as SignalCards, or shows a phase-dependent loading state.
+ * Auto-scrolls to bottom when new signals arrive.
  */
 export function SignalFeed() {
   const signals = useViewStore((s) => s.signals);
   const sources = useViewStore((s) => s.sources);
   const phase = useViewStore((s) => s.phase);
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  // Auto-scroll to bottom when new signals arrive
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTo({
+        top: scrollRef.current.scrollHeight,
+        behavior: "smooth",
+      });
+    }
+  }, [signals.length, sources.length]);
 
   if (signals.length === 0 && phase !== "active") {
     return (
@@ -51,7 +65,7 @@ export function SignalFeed() {
           Signal Feed
         </span>
       </div>
-      <div className="flex-1 flex flex-col gap-3 p-4 overflow-y-auto">
+      <div ref={scrollRef} className="flex-1 flex flex-col gap-3 p-4 overflow-y-auto">
         {sources.length > 0 && (
           <div className="mb-4">
             <h3

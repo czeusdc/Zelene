@@ -54,7 +54,8 @@ function ViewContent() {
       return;
     }
     setCompanyId(companyId);
-    api.deployIntelligence(companyId)
+    const isSimulation = localStorage.getItem("zelene_simulation_mode") === "true";
+    api.deployIntelligence(companyId, isSimulation)
       .then((res) => {
         setDeploymentId(res.deployment_id);
       })

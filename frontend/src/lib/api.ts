@@ -31,9 +31,13 @@ export const api = {
 
   getCompany: (id: string) => request<import("./types").CompanyProfile>(`/api/company/${id}`),
 
-  deployIntelligence: (companyId: string) =>
+  deployIntelligence: (companyId: string, simulation?: boolean) =>
     request<{ stream_url: string; deployment_id: string }>("/api/intelligence/deploy", {
-      method: "POST", body: JSON.stringify({ company_id: companyId }),
+      method: "POST", body: JSON.stringify({
+        company_id: companyId,
+        llm_simulation: simulation ?? false,
+        data_simulation: simulation ?? false,
+      }),
     }),
 
   getSignals: (deploymentId: string) =>

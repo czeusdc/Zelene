@@ -7,7 +7,7 @@
  */
 
 "use client";
-import { useState, FormEvent, useEffect } from "react";
+import { useState, FormEvent, useEffect, useRef } from "react";
 import { useViewStore } from "@/stores/view-store";
 import { TypingIndicator } from "@/components/conversation/typing-indicator";
 import { InsightPresence } from "@/components/intelligence/insight-card";
@@ -28,6 +28,17 @@ export function ZeleneChat() {
   const companyId = useViewStore((s) => s.companyId);
   const insights = useViewStore((s) => s.insights);
   const [input, setInput] = useState("");
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  // Auto-scroll to bottom when new insights or messages arrive
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTo({
+        top: scrollRef.current.scrollHeight,
+        behavior: "smooth",
+      });
+    }
+  }, [insights.length, messages.length]);
 
   // Auto-select latest insight as active when new insight arrives
   useEffect(() => {
@@ -89,7 +100,7 @@ export function ZeleneChat() {
       </div>
 
       {/* Scrollable content area */}
-      <div className="flex-1 overflow-y-auto px-4">
+      <div ref={scrollRef} className="flex-1 overflow-y-auto px-4">
         {/* Zelene's evolving presence — one active thought at a time */}
         <InsightPresence insights={insights} />
 

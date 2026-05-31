@@ -5,6 +5,8 @@ intelligence data. Compiles signals, entities, relationships, and
 insights into a structured strategic summary using the LLM.
 """
 
+import asyncio
+import logging
 from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -12,8 +14,10 @@ from sqlalchemy import select
 from pydantic import BaseModel
 from src.db.connection import get_db
 from src.db.models import CompanyProfile, Signal, Entity, Relationship, Insight, Deployment
-from src.agent.tools.real.briefing import generate_briefing
+from src.agent.tools.real.briefing import generate_briefing, _build_template_briefing
 from src.agent.tools.registry import ToolProvider
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(tags=["briefing"])
 
@@ -38,7 +42,7 @@ async def generate_briefing_endpoint(req: BriefingRequest, db: AsyncSession = De
 
     # Fetch intelligence data for this company
     signals_result = await db.execute(
-        select(Signal).where(Signal.company_id == company.id).order_by(Signal.created_at.desc()).limit(20)
+        select(Signal).where(Signal.company_id == company.id).order_by(Signal.extracted_at.desc()).limit(20)
     )
     signals = signals_result.scalars().all()
 
@@ -48,7 +52,6 @@ async def generate_briefing_endpoint(req: BriefingRequest, db: AsyncSession = De
     entities = entities_result.scalars().all()
 
     # Relationships are linked via deployment, not company directly
-    # Get latest deployment first, then its relationships
     dep_result = await db.execute(
         select(Deployment).where(Deployment.company_id == company.id).order_by(Deployment.started_at.desc()).limit(1)
     )
@@ -97,7 +100,13 @@ async def generate_briefing_endpoint(req: BriefingRequest, db: AsyncSession = De
         for i in insights
     ]
 
-    # Get LLM provider
+    # If no signal data, return template briefing immediately (skip LLM)
+    if not signal_dicts:
+        return _build_template_briefing(
+            company.name, signal_dicts, entity_dicts, relationship_dicts, insight_dicts
+        )
+
+    # Get LLM provider and generate briefing with timeout
     company_context = {
         "company_name": company.name,
         "industry": company.industry or "",
@@ -106,13 +115,22 @@ async def generate_briefing_endpoint(req: BriefingRequest, db: AsyncSession = De
     provider = ToolProvider(company_context)
     llm = provider.get_llm(reasoning_effort="high")
 
-    briefing = await generate_briefing(
-        company_name=company.name,
-        signals=signal_dicts,
-        entities=entity_dicts,
-        relationships=relationship_dicts,
-        insights=insight_dicts,
-        llm=llm,
-    )
+    try:
+        briefing = await asyncio.wait_for(
+            generate_briefing(
+                company_name=company.name,
+                signals=signal_dicts,
+                entities=entity_dicts,
+                relationships=relationship_dicts,
+                insights=insight_dicts,
+                llm=llm,
+            ),
+            timeout=30.0,
+        )
+    except (asyncio.TimeoutError, Exception) as exc:
+        logger.warning("Briefing LLM generation failed, using template: %s", exc)
+        briefing = _build_template_briefing(
+            company.name, signal_dicts, entity_dicts, relationship_dicts, insight_dicts
+        )
 
     return briefing

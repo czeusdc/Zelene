@@ -1,20 +1,21 @@
 """Module: Cognee memory tool for persistent intelligence storage.
 
-Provides store and query operations against the Cognee knowledge graph
-service. When the API key is configured, stores signals, entities,
-relationships, and insights as structured memory that persists across
-deployments. Falls back to a simulated in-memory store when unavailable.
+Provides store, process, and query operations against the Cognee
+knowledge graph service at the tenant-specific hosted API. When the
+API key is configured, stores signals, entities, relationships, and
+insights as structured memory that persists across deployments.
+Falls back to a simulated in-memory store when unavailable.
 """
 
 import logging
-import json
 from typing import Any
 
 import httpx
 
 logger = logging.getLogger(__name__)
 
-COGNEE_BASE_URL = "https://api.aws.cognee.ai/api/v1"
+# Tenant-specific Cognee API base URL
+COGNEE_BASE_URL = "https://tenant-bacb505d-3be9-486a-9ed7-0ad58a6da82d.aws.cognee.ai"
 
 
 class CogneeMemoryTool:
@@ -28,7 +29,7 @@ class CogneeMemoryTool:
     def __init__(self, api_key: str):
         self.api_key = api_key
         self._client = httpx.AsyncClient(
-            timeout=httpx.Timeout(60.0, connect=10.0),
+            timeout=httpx.Timeout(30.0, connect=10.0),
             headers={
                 "X-Api-Key": api_key,
                 "Content-Type": "application/json",
@@ -39,11 +40,11 @@ class CogneeMemoryTool:
         """Release the underlying HTTP client."""
         await self._client.aclose()
 
-    async def add(self, text: str, dataset_name: str = "zelene-intelligence") -> bool:
+    async def add_text(self, texts: list[str], dataset_name: str = "zelene-intelligence") -> bool:
         """Add text data to Cognee for knowledge graph processing.
 
         Args:
-            text: The intelligence data to store (signal, entity, etc.).
+            texts: List of text strings to add.
             dataset_name: Logical grouping name for the data.
 
         Returns:
@@ -51,43 +52,69 @@ class CogneeMemoryTool:
         """
         try:
             resp = await self._client.post(
-                f"{COGNEE_BASE_URL}/add",
-                json={"text": text, "dataset_name": dataset_name},
+                f"{COGNEE_BASE_URL}/api/v1/add_text",
+                json={
+                    "textData": texts,
+                    "datasetName": dataset_name,
+                },
             )
             resp.raise_for_status()
             return True
         except Exception as exc:
-            logger.warning("Cognee add failed: %s", exc)
+            logger.warning("Cognee add_text failed: %s", exc)
             return False
 
-    async def cognify(self) -> bool:
+    async def cognify(self, datasets: list[str] | None = None) -> bool:
         """Trigger knowledge graph construction from added data.
+
+        Args:
+            datasets: Optional list of dataset names to process.
+                If None, processes all available datasets.
 
         Returns:
             True if processing was initiated, False on error.
         """
         try:
-            resp = await self._client.post(f"{COGNEE_BASE_URL}/cognify")
+            payload: dict[str, Any] = {"runInBackground": False}
+            if datasets:
+                payload["datasets"] = datasets
+            resp = await self._client.post(
+                f"{COGNEE_BASE_URL}/api/v1/cognify",
+                json=payload,
+            )
             resp.raise_for_status()
             return True
         except Exception as exc:
             logger.warning("Cognee cognify failed: %s", exc)
             return False
 
-    async def search(self, query: str, limit: int = 5) -> list[dict[str, Any]]:
+    async def search(
+        self,
+        query: str,
+        datasets: list[str] | None = None,
+        limit: int = 5,
+    ) -> list[dict[str, Any]]:
         """Search the knowledge graph for relevant intelligence context.
 
         Args:
             query: Natural language search query.
+            datasets: Optional list of dataset names to search within.
             limit: Maximum number of results to return.
 
         Returns:
             List of matching knowledge graph results.
         """
         try:
+            payload: dict[str, Any] = {
+                "searchType": "GRAPH_COMPLETION",
+                "query": query,
+                "topK": limit,
+            }
+            if datasets:
+                payload["datasets"] = datasets
             resp = await self._client.post(
-                f"{COGNEE_BASE_URL}/search",
-                json={"query": query, "limit": limit},
+                f"{COGNEE_BASE_URL}/api/v1/search",
+                json=payload,
             )
             resp.raise_for_status()
             data = resp.json()
@@ -153,7 +180,8 @@ class CogneeMemoryTool:
             )
 
         full_text = "\n\n".join(parts)
-        return await self.add(full_text, dataset_name=f"zelene-{company_name.lower().replace(' ', '-')}")
+        dataset_name = f"zelene-{company_name.lower().replace(' ', '-')}"
+        return await self.add_text([full_text], dataset_name=dataset_name)
 
 
 class SimulatedCogneeTool:
@@ -166,14 +194,14 @@ class SimulatedCogneeTool:
     def __init__(self):
         self._store: list[str] = []
 
-    async def add(self, text: str, dataset_name: str = "zelene-intelligence") -> bool:
-        self._store.append(text)
+    async def add_text(self, texts: list[str], dataset_name: str = "zelene-intelligence") -> bool:
+        self._store.extend(texts)
         return True
 
-    async def cognify(self) -> bool:
+    async def cognify(self, datasets: list[str] | None = None) -> bool:
         return True
 
-    async def search(self, query: str, limit: int = 5) -> list[dict[str, Any]]:
+    async def search(self, query: str, datasets: list[str] | None = None, limit: int = 5) -> list[dict[str, Any]]:
         results = []
         for item in self._store[-limit:]:
             results.append({"text": item[:200], "score": 0.85})
